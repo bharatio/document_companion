@@ -1026,7 +1026,6 @@ class _PageRangeSelectorState extends State<_PageRangeSelector> {
       ],
     );
   }
-}
 
   /// Compresses a PDF by re-rendering at lower DPI
   /// quality: 'low' (72 DPI), 'medium' (100 DPI), 'high' (120 DPI)
@@ -1036,7 +1035,7 @@ class _PageRangeSelectorState extends State<_PageRangeSelector> {
   ) async {
     try {
       final compressedPdf = pw.Document();
-      final dpi = quality.dpi;
+      final dpi = quality.dpi.toDouble();
 
       // Re-render PDF pages at lower DPI
       await for (var img in Printing.raster(pdfBytes, dpi: dpi)) {
@@ -1282,10 +1281,12 @@ class _PageRangeSelectorState extends State<_PageRangeSelector> {
                                     child: const Text('Close'),
                                   ),
                                   TextButton(
-                                    onPressed: () {
+                                    onPressed: () async {
                                       Navigator.pop(context);
                                       final fileName = '${pdfFileName}_compressed';
-                                      showPdfOptions(context, compressedBytes, fileName);
+                                      // Use pdfService instance to call showPdfOptions
+                                      final service = PdfService();
+                                      await service.showPdfOptions(context, compressedBytes, fileName);
                                     },
                                     child: const Text('Save/Share'),
                                   ),

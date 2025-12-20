@@ -167,49 +167,75 @@ class CropBloc extends Bloc<CropEvent, CropState> {
     CropPhotoByAreaCropped event,
     Emitter<CropState> emit,
   ) async {
-    final imageDecoded = await decodeImageFromList(
-      event.image.readAsBytesSync(),
-    );
+    try {
+      // Check if image file exists
+      if (!await event.image.exists()) {
+        throw Exception('Image file does not exist');
+      }
 
-    final scalingFactorY = imageDecoded.height / newScreenSize.height;
-    final scalingFactorX = imageDecoded.width / newScreenSize.width;
+      final imageBytes = await event.image.readAsBytes();
+      
+      if (imageBytes.isEmpty) {
+        throw Exception('Image file is empty');
+      }
 
-    final area = Area(
-      topRight: Point(
-        state.area.topRight.x * scalingFactorX,
-        state.area.topRight.y * scalingFactorY,
-      ),
-      topLeft: Point(
-        state.area.topLeft.x * scalingFactorX,
-        state.area.topLeft.y * scalingFactorY,
-      ),
-      bottomLeft: Point(
-        state.area.bottomLeft.x * scalingFactorX,
-        state.area.bottomLeft.y * scalingFactorY,
-      ),
-      bottomRight: Point(
-        state.area.bottomRight.x * scalingFactorX,
-        state.area.bottomRight.y * scalingFactorY,
-      ),
-    );
+      final imageDecoded = await decodeImageFromList(imageBytes);
 
-    final contour = Contour(
-      points: [
-        area.topLeft,
-        area.topRight,
-        area.bottomRight,
-        area.bottomLeft,
-      ],
-    );
+      if (newScreenSize.height <= 0 || newScreenSize.width <= 0) {
+        throw Exception('Invalid screen size for cropping');
+      }
 
-    final response = await _imageUtils.adjustingPerspective(
-      event.image.readAsBytesSync(),
-      contour,
-    );
+      final scalingFactorY = imageDecoded.height / newScreenSize.height;
+      final scalingFactorX = imageDecoded.width / newScreenSize.width;
 
-    emit(state.copyWith(
-      imageCropped: response,
-      areaParsed: area,
-    ));
+      final area = Area(
+        topRight: Point(
+          state.area.topRight.x * scalingFactorX,
+          state.area.topRight.y * scalingFactorY,
+        ),
+        topLeft: Point(
+          state.area.topLeft.x * scalingFactorX,
+          state.area.topLeft.y * scalingFactorY,
+        ),
+        bottomLeft: Point(
+          state.area.bottomLeft.x * scalingFactorX,
+          state.area.bottomLeft.y * scalingFactorY,
+        ),
+        bottomRight: Point(
+          state.area.bottomRight.x * scalingFactorX,
+          state.area.bottomRight.y * scalingFactorY,
+        ),
+      );
+
+      final contour = Contour(
+        points: [
+          area.topLeft,
+          area.topRight,
+          area.bottomRight,
+          area.bottomLeft,
+        ],
+      );
+
+      final response = await _imageUtils.adjustingPerspective(
+        imageBytes,
+        contour,
+      );
+
+      if (response == null || response.isEmpty) {
+        throw Exception('Failed to crop image. Both native and fallback methods failed.');
+      }
+
+      emit(state.copyWith(
+        imageCropped: response,
+        areaParsed: area,
+      ));
+    } catch (e) {
+      // If cropping fails, emit error but don't crash
+      // The AppBloc listener should handle this
+      print('Error cropping image: $e');
+      // Re-emit current state to allow retry
+      // Don't set imageCropped to null explicitly to avoid triggering listeners incorrectly
+      emit(state);
+    }
   }
 }

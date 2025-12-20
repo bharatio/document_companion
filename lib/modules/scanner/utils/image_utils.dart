@@ -1,8 +1,9 @@
 import 'dart:math';
 import 'dart:typed_data';
+import 'dart:ui';
 
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:image/image.dart' as img;
 
 import '../models/area.dart';
 import '../models/contour.dart';
@@ -139,11 +140,13 @@ class ImageUtils {
 
   /// Based on the given [Contour.points], the perspective is created
   /// and a new image is returned [Uint8List]
+  /// Falls back to rectangular crop if native perspective adjustment fails
   Future<Uint8List?> adjustingPerspective(
     Uint8List byteData,
     Contour contour,
   ) async {
     try {
+      // Try native perspective adjustment first
       final newImage =
           await _methodChannel.invokeMethod("adjustingPerspective", {
         "byteData": byteData,
@@ -155,10 +158,73 @@ class ImageUtils {
             .toList(),
       });
 
-      return newImage;
+      if (newImage != null && newImage.isNotEmpty) {
+        return newImage;
+      }
+
+      // Fallback to rectangular crop if native method fails
+      print('Native perspective adjustment failed, using fallback rectangular crop');
+      return _fallbackRectangularCrop(byteData, contour);
     } catch (e) {
-      // TODO: add error handler
-      // print(e);
+      print('Error in adjustingPerspective: $e');
+      // Fallback to rectangular crop on error
+      try {
+        return _fallbackRectangularCrop(byteData, contour);
+      } catch (fallbackError) {
+        print('Fallback crop also failed: $fallbackError');
+        return null;
+      }
+    }
+  }
+
+  /// Fallback rectangular crop when perspective adjustment is not available
+  Uint8List? _fallbackRectangularCrop(
+    Uint8List byteData,
+    Contour contour,
+  ) {
+    try {
+      // Decode the image
+      final image = img.decodeImage(byteData);
+      if (image == null) {
+        return null;
+      }
+
+      // Calculate bounding rectangle from contour points
+      double minX = double.infinity;
+      double minY = double.infinity;
+      double maxX = double.negativeInfinity;
+      double maxY = double.negativeInfinity;
+
+      for (final point in contour.points) {
+        minX = min(minX, point.x);
+        minY = min(minY, point.y);
+        maxX = max(maxX, point.x);
+        maxY = max(maxY, point.y);
+      }
+
+      // Ensure coordinates are within image bounds
+      final x = max(0, minX.round());
+      final y = max(0, minY.round());
+      final width = min(image.width - x, (maxX - minX).round());
+      final height = min(image.height - y, (maxY - minY).round());
+
+      if (width <= 0 || height <= 0) {
+        return null;
+      }
+
+      // Crop the image
+      final croppedImage = img.copyCrop(
+        image,
+        x: x,
+        y: y,
+        width: width,
+        height: height,
+      );
+
+      // Encode back to bytes (JPEG format)
+      return Uint8List.fromList(img.encodeJpg(croppedImage, quality: 95));
+    } catch (e) {
+      print('Error in fallback crop: $e');
       return null;
     }
   }

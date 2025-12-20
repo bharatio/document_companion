@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:camera/camera.dart';
-import 'package:document_companion/config/custom_colors.dart';
+import 'package:document_companion/modules/home/view/images_preview.dart';
 import 'package:flutter/material.dart';
 
 import '../../home/bloc/current_image_bloc.dart';
@@ -23,11 +23,12 @@ class _ScanState extends State<Scan> {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      child: DocumentScanner(
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: DocumentScanner(
         controller: _controller,
         generalStyles: const GeneralStyles(
-          baseColor: CustomColors.leatherJacket,
+          baseColor: Colors.black,
           hideDefaultDialogs: true,
         ),
         cropPhotoDocumentStyle: CropPhotoDocumentStyle(
@@ -37,6 +38,10 @@ class _ScanState extends State<Scan> {
         onSave: (Uint8List imageBytes) async {
           await currentImageBloc.saveCurrentImage(imageBytes);
           await currentImageBloc.getCurrentImage();
+          // Navigate to images preview after saving
+          if (mounted) {
+            Navigator.pushNamed(context, ImagesPreview.route);
+          }
         },
       ),
     );

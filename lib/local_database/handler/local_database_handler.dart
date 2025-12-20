@@ -18,8 +18,9 @@ class LocalDatabaseHandler {
     String path = join(documentsDirectory.path, "test.db");
     var theDb = await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
     );
     return theDb;
   }
@@ -32,6 +33,17 @@ class LocalDatabaseHandler {
     // Create [Folders] table
     await db.execute(
         "CREATE TABLE Folders(id TEXT PRIMARY KEY, folder_name TEXT, created_on TEXT, modified_on TEXT )");
+    // Create [Images] table for folder-linked images
+    await db.execute(
+        "CREATE TABLE Images(id TEXT PRIMARY KEY, folder_id TEXT, image BLOB, name TEXT, created_on TEXT, modified_on TEXT, size INTEGER, width INTEGER, height INTEGER, FOREIGN KEY (folder_id) REFERENCES Folders(id) ON DELETE CASCADE)");
+  }
+
+  void _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      // Add Images table for existing databases
+      await db.execute(
+          "CREATE TABLE IF NOT EXISTS Images(id TEXT PRIMARY KEY, folder_id TEXT, image BLOB, name TEXT, created_on TEXT, modified_on TEXT, size INTEGER, width INTEGER, height INTEGER, FOREIGN KEY (folder_id) REFERENCES Folders(id) ON DELETE CASCADE)");
+    }
   }
 }
 

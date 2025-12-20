@@ -43,8 +43,18 @@ class CurrentImageBloc {
   Future<void> deleteCurrentImages() async {
     try {
       _databaseHandler.deleteCurrentImage();
+      await getCurrentImage(); // Refresh stream after deletion
     } catch (e) {
       print(e);
+    }
+  }
+
+  Future<List<CurrentImage>> getCurrentImagesList() async {
+    try {
+      return await _databaseHandler.getCurrentImage();
+    } catch (e) {
+      print(e);
+      return [];
     }
   }
 }

@@ -3,7 +3,6 @@ import 'package:document_companion/modules/home/bloc/current_image_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../config/custom_colors.dart';
 import '../../bloc/app/app_bloc.dart';
 import '../../bloc/app/app_state.dart';
 import '../../utils/take_photo_document_style.dart';
@@ -57,7 +56,7 @@ class _CameraPreview extends StatefulWidget {
 
 class _CameraPreviewState extends State<_CameraPreview> {
   bool isTorchOn = false;
-  double zoomLevel = 1.0;
+
   @override
   Widget build(BuildContext context) {
     return BlocSelector<AppBloc, AppState, CameraController?>(
@@ -65,127 +64,98 @@ class _CameraPreviewState extends State<_CameraPreview> {
       builder: (context, state) {
         if (state == null) {
           return const Center(
-            child: Text(
-              "No Camera",
-            ),
+            child: CircularProgressIndicator(),
           );
         }
 
-        return Stack(
-          alignment: Alignment.topRight,
-          children: [
-            Column(
-              children: [
-                // * Camera
-                CameraPreview(state),
-
-                // * children
-                if (widget.takePhotoDocumentStyle.children != null)
-                  ...widget.takePhotoDocumentStyle.children!,
-                //
-                /// Default
-                const ButtonTakePhoto(),
-              ],
-            ),
-            Positioned(
-              top: 50,
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    backgroundColor: CustomColors.black.withOpacity(0.4),
-                    child: IconButton(
-                      onPressed: () {
-                        if (state.value.flashMode == FlashMode.off) {
-                          state.setFlashMode(FlashMode.torch);
-                          setState(() {
-                            isTorchOn = true;
-                          });
-                        } else {
-                          state.setFlashMode(FlashMode.off);
-                          setState(() {
-                            isTorchOn = false;
-                          });
-                        }
-                      },
-                      icon: Icon(
-                        isTorchOn
-                            ? Icons.light_mode_outlined
-                            : Icons.light_mode,
-                        size: 21,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                  SizedBox(
-                    width: 10,
-                  ),
-                  CircleAvatar(
-                    backgroundColor: CustomColors.black.withOpacity(0.4),
-                    child: IconButton(
-                      onPressed: () async {
-                        zoomLevel = await state.getMinZoomLevel();
-                        if (zoomLevel < await state.getMaxZoomLevel()) {
-                          zoomLevel += 1.0;
-                          try {
-                            state.setZoomLevel(zoomLevel);
-                          } catch (e) {
-                            print(e);
-                          }
-                        }
-                        setState(() {});
-                      },
-                      icon: Icon(
-                        Icons.zoom_in,
-                        size: 21,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                  SizedBox(
-                    width: 10,
-                  ),
-                  CircleAvatar(
-                    backgroundColor: CustomColors.black.withOpacity(0.4),
-                    child: IconButton(
-                      onPressed: () async {
-                        if (zoomLevel > await state.getMinZoomLevel()) {
-                          zoomLevel -= 1.0;
-                          state.setZoomLevel(zoomLevel);
-                        }
-                        setState(() {});
-                      },
-                      icon: Icon(
-                        Icons.zoom_out,
-                        size: 21,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                  SizedBox(
-                    width: 10,
-                  ),
-                ],
+        return SizedBox.expand(
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              // Camera Preview - fills entire screen
+              SizedBox.expand(
+                child: CameraPreview(state),
               ),
-            ),
-            Positioned(
-              left: 20,
-              top: 50,
-              child: CircleAvatar(
-                backgroundColor: CustomColors.black.withOpacity(0.4),
-                child: IconButton(
-                  onPressed: () {
-                    currentImageBloc.deleteCurrentImages();
-                    Navigator.pop(context);
-                  },
-                  icon: Icon(
-                    Icons.close,
-                    size: 21,
-                    color: Colors.white,
+              
+              // Top bar with close button
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: SafeArea(
+                  bottom: false,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // Close button
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.5),
+                            shape: BoxShape.circle,
+                          ),
+                          child: IconButton(
+                            onPressed: () {
+                              currentImageBloc.deleteCurrentImages();
+                              Navigator.pop(context);
+                            },
+                            icon: const Icon(
+                              Icons.close_rounded,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                        
+                        // Flash toggle
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.5),
+                            shape: BoxShape.circle,
+                          ),
+                          child: IconButton(
+                            onPressed: () async {
+                              if (state.value.flashMode == FlashMode.off) {
+                                await state.setFlashMode(FlashMode.torch);
+                                setState(() => isTorchOn = true);
+                              } else {
+                                await state.setFlashMode(FlashMode.off);
+                                setState(() => isTorchOn = false);
+                              }
+                            },
+                            icon: Icon(
+                              isTorchOn
+                                  ? Icons.flash_on_rounded
+                                  : Icons.flash_off_rounded,
+                              color: isTorchOn ? Colors.amber : Colors.white,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
+
+              // Bottom controls
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // * children
+                    if (widget.takePhotoDocumentStyle.children != null)
+                      ...widget.takePhotoDocumentStyle.children!,
+                    //
+                    /// Default
+                    const ButtonTakePhoto(),
+                  ],
+                ),
+              ),
+            ],
+          ),
         );
       },
     );

@@ -95,9 +95,37 @@ class _CropView extends StatelessWidget {
               current.statusCropPhoto != previous.statusCropPhoto,
           listener: (context, state) {
             if (state.statusCropPhoto == AppStatus.loading) {
-              context.read<CropBloc>().add(
-                    CropPhotoByAreaCropped(image),
-                  );
+              // Trigger crop operation
+              // Use a small delay to ensure the state is properly set
+              Future.microtask(() async {
+                if (context.mounted) {
+                  try {
+                    // Verify image file exists before cropping
+                    if (await image.exists()) {
+                      context.read<CropBloc>().add(
+                            CropPhotoByAreaCropped(image),
+                          );
+                    } else {
+                      throw Exception('Image file not found');
+                    }
+                  } catch (e) {
+                    // Show error if file doesn't exist
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Error: ${e.toString()}'),
+                          backgroundColor: Colors.red,
+                          duration: const Duration(seconds: 3),
+                        ),
+                      );
+                      // Reset crop status
+                      context.read<AppBloc>().add(
+                            AppPageChanged(AppPages.cropPhoto),
+                          );
+                    }
+                  }
+                }
+              });
             }
           },
         ),
@@ -105,7 +133,8 @@ class _CropView extends StatelessWidget {
           listenWhen: (previous, current) =>
               current.imageCropped != previous.imageCropped,
           listener: (context, state) {
-            if (state.imageCropped != null) {
+            if (state.imageCropped != null && state.areaParsed != null) {
+              // Load cropped photo and navigate to edit page
               context.read<AppBloc>().add(
                     AppLoadCroppedPhoto(
                       image: state.imageCropped!,
@@ -115,18 +144,51 @@ class _CropView extends StatelessWidget {
             }
           },
         ),
+        // Separate listener for timeout handling
+        BlocListener<AppBloc, AppState>(
+          listenWhen: (previous, current) =>
+              current.statusCropPhoto == AppStatus.loading &&
+              previous.statusCropPhoto != AppStatus.loading,
+          listener: (context, state) {
+            // Set a timeout to detect if cropping is taking too long
+            Future.delayed(const Duration(seconds: 5), () {
+              if (context.mounted) {
+                final currentState = context.read<AppBloc>().state;
+                final cropState = context.read<CropBloc>().state;
+                
+                // If still loading and no cropped image, show error
+                if (currentState.statusCropPhoto == AppStatus.loading &&
+                    cropState.imageCropped == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Cropping is taking too long. Please try again.'),
+                      backgroundColor: Colors.red,
+                      duration: Duration(seconds: 3),
+                    ),
+                  );
+                  // Reset crop status to allow retry
+                  context.read<AppBloc>().add(
+                        AppPageChanged(AppPages.cropPhoto),
+                      );
+                }
+              }
+            });
+          },
+        ),
       ],
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          Positioned(
-            top: cropPhotoDocumentStyle.top,
-            bottom: cropPhotoDocumentStyle.bottom,
-            left: cropPhotoDocumentStyle.left,
-            right: cropPhotoDocumentStyle.right,
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
+      child: SizedBox.expand(
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            // Image and crop area
+            Positioned(
+              top: cropPhotoDocumentStyle.top,
+              bottom: cropPhotoDocumentStyle.bottom,
+              left: cropPhotoDocumentStyle.left,
+              right: cropPhotoDocumentStyle.right,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
                 // * Photo
                 Positioned.fill(
                   child: Image.file(
@@ -343,17 +405,18 @@ class _CropView extends StatelessWidget {
                 ),
               ],
             ),
-          ),
+            ),
 
-          // * Default App Bar
-          AppBarCropPhoto(
-            cropPhotoDocumentStyle: cropPhotoDocumentStyle,
-          ),
+            // * Default App Bar - Must be on top
+            AppBarCropPhoto(
+              cropPhotoDocumentStyle: cropPhotoDocumentStyle,
+            ),
 
-          // * children
-          if (cropPhotoDocumentStyle.children != null)
-            ...cropPhotoDocumentStyle.children!,
-        ],
+            // * children
+            if (cropPhotoDocumentStyle.children != null)
+              ...cropPhotoDocumentStyle.children!,
+          ],
+        ),
       ),
     );
   }

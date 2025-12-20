@@ -16,54 +16,58 @@ class AppBarEditPhoto extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (editPhotoDocumentStyle.hideAppBarDefault) return Container();
+    if (editPhotoDocumentStyle.hideAppBarDefault) return const SizedBox.shrink();
 
     return Positioned(
       top: 0,
       left: 0,
       right: 0,
-      child: Container(
-        margin: EdgeInsets.only(top: 50),
-        padding: EdgeInsets.symmetric(horizontal: 20),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            CircleAvatar(
-              backgroundColor: CustomColors.black.withOpacity(0.4),
-              child: IconButton(
-                onPressed: () =>
-                    context.read<DocumentScannerController>().changePage(
-                          AppPages.cropPhoto,
-                        ),
-                icon: const Icon(
-                  Icons.close,
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Back button
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.5),
+                  shape: BoxShape.circle,
                 ),
-                color: Colors.white,
+                child: IconButton(
+                  onPressed: () =>
+                      context.read<DocumentScannerController>().changePage(
+                            AppPages.cropPhoto,
+                          ),
+                  icon: const Icon(
+                    Icons.arrow_back_rounded,
+                    color: Colors.white,
+                  ),
+                ),
               ),
-            ),
 
-            // * Crop photo
-            Container(
-              decoration: BoxDecoration(
-                color: CustomColors.black.withOpacity(0.4),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: TextButton.icon(
+              // Save button
+              ElevatedButton.icon(
                 onPressed: () => context
                     .read<DocumentScannerController>()
                     .savePhotoDocument(),
-                label: Text(
-                  editPhotoDocumentStyle.textButtonSave,
-                ),
-                style: TextButton.styleFrom(
-                  primary: Colors.white,
-                ),
-                icon: Icon(
-                  Icons.save,
+                icon: const Icon(Icons.check_rounded),
+                label: Text(editPhotoDocumentStyle.textButtonSave),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: CustomColors.primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

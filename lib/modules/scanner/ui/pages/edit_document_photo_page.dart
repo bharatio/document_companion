@@ -121,44 +121,44 @@ class _EditView extends StatelessWidget {
           },
         ),
       ],
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          Positioned(
-            top: editPhotoDocumentStyle.top,
-            left: editPhotoDocumentStyle.left,
-            right: editPhotoDocumentStyle.right,
-            bottom: editPhotoDocumentStyle.bottom,
-            child: BlocSelector<EditBloc, EditState, Uint8List?>(
-              selector: (state) => state.image,
-              builder: (context, image) {
-                if (image == null) {
-                  return const Center(
-                    child: CircularProgressIndicator(),
+      child: SizedBox.expand(
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            // Image display
+            Positioned.fill(
+              child: BlocSelector<EditBloc, EditState, Uint8List?>(
+                selector: (state) => state.image,
+                builder: (context, image) {
+                  if (image == null) {
+                    return const Center(
+                      child: CircularProgressIndicator(),
+                    );
+                  }
+
+                  return Image.memory(
+                    image,
+                    fit: BoxFit.contain,
                   );
-                }
-
-                return Image.memory(
-                  image,
-                );
-              },
+                },
+              ),
             ),
-          ),
 
-          // * Default App Bar
-          AppBarEditPhoto(
-            editPhotoDocumentStyle: editPhotoDocumentStyle,
-          ),
+            // * Default App Bar
+            AppBarEditPhoto(
+              editPhotoDocumentStyle: editPhotoDocumentStyle,
+            ),
 
-          // * Default Bottom Bar
-          BottomBarEditPhoto(
-            editPhotoDocumentStyle: editPhotoDocumentStyle,
-          ),
+            // * Default Bottom Bar
+            BottomBarEditPhoto(
+              editPhotoDocumentStyle: editPhotoDocumentStyle,
+            ),
 
-          // * children
-          if (editPhotoDocumentStyle.children != null)
-            ...editPhotoDocumentStyle.children!,
-        ],
+            // * children
+            if (editPhotoDocumentStyle.children != null)
+              ...editPhotoDocumentStyle.children!,
+          ],
+        ),
       ),
     );
   }

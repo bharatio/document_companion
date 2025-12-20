@@ -16,133 +16,126 @@ class BottomBarEditPhoto extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (editPhotoDocumentStyle.hideBottomBarDefault) return Container();
+    if (editPhotoDocumentStyle.hideBottomBarDefault) return const SizedBox.shrink();
 
     return Positioned(
-      bottom: 50,
-      left: 10,
-      right: 10,
-      child: StreamBuilder(
-          stream: context.read<DocumentScannerController>().currentFilterType,
-          builder: (context, AsyncSnapshot<FilterType> snapshot) {
-            return Container(
-              height: 80,
-              padding: EdgeInsets.symmetric(horizontal: 20),
-              decoration: BoxDecoration(
-                color: Theme.of(context).primaryColor,
+      bottom: 0,
+      left: 0,
+      right: 0,
+      child: SafeArea(
+        top: false,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+          decoration: BoxDecoration(
+            color: CustomColors.surface,
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(24),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 20,
+                offset: const Offset(0, -5),
               ),
-              child: ListView(
-                scrollDirection: Axis.horizontal,
+            ],
+          ),
+          child: StreamBuilder<FilterType>(
+            stream: context.read<DocumentScannerController>().currentFilterType,
+            builder: (context, AsyncSnapshot<FilterType> snapshot) {
+              final currentFilter = snapshot.data ?? FilterType.natural;
+              
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  InkWell(
-                    onTap: () =>
-                        context.read<DocumentScannerController>().applyFilter(
-                              FilterType.natural,
-                            ),
-                    child: Container(
-                      width: 100,
-                      padding: EdgeInsets.all(15),
-                      margin: EdgeInsets.only(right: 10),
-                      decoration: BoxDecoration(
-                        color: snapshot.data?.index == 0
-                            ? CustomColors.leatherJacket
-                            : CustomColors.white,
-                        borderRadius: BorderRadius.circular(5),
-                      ),
-                      child: Column(
-                        children: [
-                          Icon(
-                            Icons.nature_people_outlined,
-                            color: CustomColors.leatherJacket,
-                          ),
-                          SizedBox(
-                            height: 5,
-                          ),
-                          Text(
-                            'Natural',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: CustomColors.leatherJacket,
-                            ),
-                          )
-                        ],
-                      ),
-                    ),
+                  _FilterButton(
+                    label: 'Natural',
+                    icon: Icons.auto_awesome_rounded,
+                    isSelected: currentFilter == FilterType.natural,
+                    onTap: () => context
+                        .read<DocumentScannerController>()
+                        .applyFilter(FilterType.natural),
                   ),
-                  InkWell(
-                    onTap: () =>
-                        context.read<DocumentScannerController>().applyFilter(
-                              FilterType.gray,
-                            ),
-                    child: Container(
-                      width: 100,
-                      padding: EdgeInsets.all(15),
-                      margin: EdgeInsets.only(right: 10),
-                      decoration: BoxDecoration(
-                        color: snapshot.data?.index == 1
-                            ? CustomColors.leatherJacket
-                            : CustomColors.white,
-                        borderRadius: BorderRadius.circular(5),
-                      ),
-                      child: Column(
-                        children: [
-                          Icon(
-                            Icons.nature_people_outlined,
-                            color: CustomColors.leatherJacket,
-                          ),
-                          SizedBox(
-                            height: 5,
-                          ),
-                          Text(
-                            'Gray',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: CustomColors.leatherJacket,
-                            ),
-                          )
-                        ],
-                      ),
-                    ),
+                  _FilterButton(
+                    label: 'Gray',
+                    icon: Icons.filter_b_and_w_rounded,
+                    isSelected: currentFilter == FilterType.gray,
+                    onTap: () => context
+                        .read<DocumentScannerController>()
+                        .applyFilter(FilterType.gray),
                   ),
-                  InkWell(
-                    onTap: () =>
-                        context.read<DocumentScannerController>().applyFilter(
-                              FilterType.eco,
-                            ),
-                    child: Container(
-                      width: 100,
-                      padding: EdgeInsets.all(15),
-                      margin: EdgeInsets.only(right: 10),
-                      decoration: BoxDecoration(
-                        color: snapshot.data?.index == 2
-                            ? CustomColors.leatherJacket
-                            : CustomColors.white,
-                        borderRadius: BorderRadius.circular(5),
-                      ),
-                      child: Column(
-                        children: [
-                          Icon(
-                            Icons.nature_people_outlined,
-                            color: CustomColors.leatherJacket,
-                          ),
-                          SizedBox(
-                            height: 5,
-                          ),
-                          Text(
-                            'Eco',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: CustomColors.leatherJacket,
-                            ),
-                          )
-                        ],
-                      ),
-                    ),
+                  _FilterButton(
+                    label: 'Eco',
+                    icon: Icons.eco_rounded,
+                    isSelected: currentFilter == FilterType.eco,
+                    onTap: () => context
+                        .read<DocumentScannerController>()
+                        .applyFilter(FilterType.eco),
                   ),
                 ],
-              ),
-            );
-          }),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FilterButton extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _FilterButton({
+    required this.label,
+    required this.icon,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? CustomColors.primary.withOpacity(0.1)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected
+                ? CustomColors.primary
+                : CustomColors.border,
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              color: isSelected
+                  ? CustomColors.primary
+                  : CustomColors.textSecondary,
+              size: 24,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: isSelected
+                        ? CustomColors.primary
+                        : CustomColors.textSecondary,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                  ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

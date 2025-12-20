@@ -65,12 +65,7 @@ class _HomepageState extends State<Homepage> {
         pdfService.showSplitPdfDialog(context);
         break;
       case 3: // File Compress
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('File compression feature coming soon'),
-            duration: Duration(seconds: 2),
-          ),
-        );
+        pdfService.showCompressPdfDialog(context);
         break;
       case 4: // Image to PDF
         _handleImageToPdf(context);

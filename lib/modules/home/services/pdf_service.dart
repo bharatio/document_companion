@@ -1028,5 +1028,312 @@ class _PageRangeSelectorState extends State<_PageRangeSelector> {
   }
 }
 
+  /// Compresses a PDF by re-rendering at lower DPI
+  /// quality: 'low' (72 DPI), 'medium' (100 DPI), 'high' (120 DPI)
+  Future<Uint8List?> compressPdf(
+    Uint8List pdfBytes,
+    CompressionQuality quality,
+  ) async {
+    try {
+      final compressedPdf = pw.Document();
+      final dpi = quality.dpi;
+
+      // Re-render PDF pages at lower DPI
+      await for (var img in Printing.raster(pdfBytes, dpi: dpi)) {
+        try {
+          final imgBytes = await img.toPng();
+          final pdfImage = pw.MemoryImage(imgBytes);
+
+          compressedPdf.addPage(
+            pw.Page(
+              pageFormat: PdfPageFormat.a4,
+              build: (pw.Context context) {
+                return pw.Center(
+                  child: pw.Image(
+                    pdfImage,
+                    fit: pw.BoxFit.contain,
+                  ),
+                );
+              },
+            ),
+          );
+        } catch (e) {
+          print('Error compressing page: $e');
+        }
+      }
+
+      return await compressedPdf.save();
+    } catch (e) {
+      print('Error compressing PDF: $e');
+      return null;
+    }
+  }
+
+  /// Formats file size in human-readable format
+  String _formatFileSize(int bytes) {
+    if (bytes < 1024) {
+      return '$bytes B';
+    } else if (bytes < 1024 * 1024) {
+      return '${(bytes / 1024).toStringAsFixed(2)} KB';
+    } else {
+      return '${(bytes / (1024 * 1024)).toStringAsFixed(2)} MB';
+    }
+  }
+
+  /// Shows PDF compression dialog with quality selection
+  Future<void> showCompressPdfDialog(BuildContext context) async {
+    try {
+      // Show file picker to select PDF
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf'],
+        allowMultiple: false,
+      );
+
+      if (result == null || result.files.isEmpty) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('No PDF selected'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+        return;
+      }
+
+      final platformFile = result.files.first;
+      File? pdfFile;
+
+      if (platformFile.path != null) {
+        pdfFile = File(platformFile.path!);
+      } else if (platformFile.bytes != null) {
+        final directory = await getTemporaryDirectory();
+        pdfFile = File('${directory.path}/${platformFile.name}');
+        await pdfFile.writeAsBytes(platformFile.bytes!);
+      }
+
+      if (pdfFile == null) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Error reading PDF file'),
+              backgroundColor: Colors.red,
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+        return;
+      }
+
+      final pdfBytes = await pdfFile.readAsBytes();
+      final originalSize = pdfBytes.length;
+      final pdfFileName = platformFile.name.replaceAll('.pdf', '');
+
+      if (!context.mounted) return;
+
+      // Show compression quality selection dialog
+      await _showCompressionQualityDialog(
+        context,
+        pdfBytes,
+        pdfFileName,
+        originalSize,
+      );
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+
+  /// Shows compression quality selection dialog
+  Future<void> _showCompressionQualityDialog(
+    BuildContext context,
+    Uint8List pdfBytes,
+    String pdfFileName,
+    int originalSize,
+  ) async {
+    CompressionQuality? selectedQuality;
+
+    await showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            title: const Text('Compress PDF'),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Original size: ${_formatFileSize(originalSize)}',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Select compression quality:',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: 16),
+                  RadioListTile<CompressionQuality>(
+                    title: const Text('Low (Smaller file)'),
+                    subtitle: Text('~${_formatFileSize((originalSize * 0.3).round())} estimated'),
+                    value: CompressionQuality.low,
+                    groupValue: selectedQuality,
+                    onChanged: (value) {
+                      setState(() {
+                        selectedQuality = value;
+                      });
+                    },
+                  ),
+                  RadioListTile<CompressionQuality>(
+                    title: const Text('Medium (Balanced)'),
+                    subtitle: Text('~${_formatFileSize((originalSize * 0.5).round())} estimated'),
+                    value: CompressionQuality.medium,
+                    groupValue: selectedQuality,
+                    onChanged: (value) {
+                      setState(() {
+                        selectedQuality = value;
+                      });
+                    },
+                  ),
+                  RadioListTile<CompressionQuality>(
+                    title: const Text('High (Better quality)'),
+                    subtitle: Text('~${_formatFileSize((originalSize * 0.7).round())} estimated'),
+                    value: CompressionQuality.high,
+                    groupValue: selectedQuality,
+                    onChanged: (value) {
+                      setState(() {
+                        selectedQuality = value;
+                      });
+                    },
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: selectedQuality == null
+                    ? null
+                    : () async {
+                        Navigator.pop(context); // Close dialog
+
+                        if (!context.mounted) return;
+
+                        // Show loading
+                        showDialog(
+                          context: context,
+                          barrierDismissible: false,
+                          builder: (context) => const Center(
+                            child: CircularProgressIndicator(),
+                          ),
+                        );
+
+                        try {
+                          final compressedBytes = await compressPdf(
+                            pdfBytes,
+                            selectedQuality!,
+                          );
+
+                          if (!context.mounted) return;
+                          Navigator.pop(context); // Close loading
+
+                          if (compressedBytes != null) {
+                            final compressedSize = compressedBytes.length;
+                            final reduction = ((originalSize - compressedSize) / originalSize * 100);
+
+                            // Show success with size comparison
+                            await showDialog(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: const Text('PDF Compressed'),
+                                content: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('Original: ${_formatFileSize(originalSize)}'),
+                                    Text('Compressed: ${_formatFileSize(compressedSize)}'),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      'Reduced by ${reduction.toStringAsFixed(1)}%',
+                                      style: TextStyle(
+                                        color: reduction > 0
+                                            ? Colors.green
+                                            : Colors.red,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    child: const Text('Close'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.pop(context);
+                                      final fileName = '${pdfFileName}_compressed';
+                                      showPdfOptions(context, compressedBytes, fileName);
+                                    },
+                                    child: const Text('Save/Share'),
+                                  ),
+                                ],
+                              ),
+                            );
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Error compressing PDF'),
+                                backgroundColor: Colors.red,
+                                duration: Duration(seconds: 3),
+                              ),
+                            );
+                          }
+                        } catch (e) {
+                          if (!context.mounted) return;
+                          if (Navigator.canPop(context)) {
+                            Navigator.pop(context);
+                          }
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Error: $e'),
+                              backgroundColor: Colors.red,
+                              duration: const Duration(seconds: 3),
+                            ),
+                          );
+                        }
+                      },
+                child: const Text('Compress'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+/// Compression quality levels
+enum CompressionQuality {
+  low(72),
+  medium(100),
+  high(120);
+
+  final int dpi;
+  const CompressionQuality(this.dpi);
+}
+
 final pdfService = PdfService();
 

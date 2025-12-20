@@ -4,6 +4,7 @@ import 'package:document_companion/modules/home/bloc/current_image_bloc.dart';
 import 'package:document_companion/modules/home/bloc/folder_bloc.dart';
 import 'package:document_companion/modules/home/bloc/image_bloc.dart';
 import 'package:document_companion/modules/home/models/folder_view_model.dart';
+import 'package:document_companion/modules/home/services/pdf_service.dart';
 import 'package:document_companion/modules/home/view/create_bottom_modal_sheet.dart';
 import 'package:document_companion/modules/home/view/images_preview.dart';
 import 'package:document_companion/utils/constants/constants.dart';
@@ -58,12 +59,7 @@ class _HomepageState extends State<Homepage> {
         );
         break;
       case 1: // Merge PDF
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Merge PDF feature coming soon'),
-            duration: Duration(seconds: 2),
-          ),
-        );
+        pdfService.showMergePdfDialog(context);
         break;
       case 2: // File Compress
         ScaffoldMessenger.of(context).showSnackBar(

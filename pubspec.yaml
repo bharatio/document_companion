@@ -40,10 +40,12 @@ dependencies:
   path: ^1.9.0
   sqflite: ^2.3.3+2
   file: ^7.0.1
+  file_picker: ^8.1.4
   
   # PDF Generation
   pdf: ^3.11.1
   printing: ^5.13.2
+  pdf_combiner: ^3.4.0
   
   # Sharing
   share_plus: ^10.1.2

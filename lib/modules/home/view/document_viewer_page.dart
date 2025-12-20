@@ -135,6 +135,14 @@ class _DocumentOptionsSheet extends StatelessWidget {
               },
             ),
             ListTile(
+              leading: const Icon(Icons.drive_file_move_rounded),
+              title: const Text('Move'),
+              onTap: () {
+                Navigator.pop(context);
+                documentService.showMoveDialog(context, image, folderId);
+              },
+            ),
+            ListTile(
               leading: const Icon(Icons.share_rounded),
               title: const Text('Share'),
               onTap: () {

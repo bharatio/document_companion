@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
-import 'package:pdf_combiner/pdf_combiner.dart';
 import 'package:printing/printing.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -138,49 +137,52 @@ class PdfService {
     );
   }
 
-  /// Merges multiple PDFs into a single PDF using pdf_combiner
+  /// Merges multiple PDFs into a single PDF
+  /// Converts PDF pages to images and merges them (lossy but reliable)
   Future<Uint8List?> mergePdfsFromFiles(List<File> pdfFiles) async {
     try {
       if (pdfFiles.isEmpty) {
         return null;
       }
 
-      // Get temporary directory for merging
-      final directory = await getTemporaryDirectory();
-      final outputPath = '${directory.path}/merged_${DateTime.now().millisecondsSinceEpoch}.pdf';
-      
-      // Convert File objects to paths
-      final inputPaths = pdfFiles.map((file) => file.path).toList();
-      
-      // Merge PDFs using pdf_combiner
-      final response = await PdfCombiner.mergeMultiplePDFs(
-        inputPaths: inputPaths,
-        outputPath: outputPath,
-      );
+      final mergedPdf = pw.Document();
 
-      // Check if merge was successful (response.response contains the output path)
-      if (response.response != null && response.response!.isNotEmpty) {
-        // Read the merged PDF file
-        final mergedFile = File(response.response!);
-        if (await mergedFile.exists()) {
-          final mergedBytes = await mergedFile.readAsBytes();
+      for (var pdfFile in pdfFiles) {
+        try {
+          final pdfBytes = await pdfFile.readAsBytes();
           
-          // Clean up temporary file
-          try {
-            await mergedFile.delete();
-          } catch (e) {
-            // Ignore cleanup errors
+          // Render PDF pages as images using printing package
+          // Printing.raster returns a Stream<PdfRaster>
+          await for (var img in Printing.raster(pdfBytes, dpi: 150)) {
+            try {
+              final imgBytes = await img.toPng();
+              final pdfImage = pw.MemoryImage(imgBytes);
+              
+              mergedPdf.addPage(
+                pw.Page(
+                  pageFormat: PdfPageFormat.a4,
+                  build: (pw.Context context) {
+                    return pw.Center(
+                      child: pw.Image(
+                        pdfImage,
+                        fit: pw.BoxFit.contain,
+                      ),
+                    );
+                  },
+                ),
+              );
+            } catch (e) {
+              print('Error converting page to image: $e');
+              // Continue with next page
+            }
           }
-          
-          return mergedBytes;
-        } else {
-          print('Error: Merged PDF file not found at ${response.response}');
-          return null;
+        } catch (e) {
+          print('Error processing PDF ${pdfFile.path}: $e');
+          // Continue with next PDF even if one fails
         }
-      } else {
-        print('Error merging PDFs: ${response.message ?? "Unknown error"}');
-        return null;
       }
+
+      return mergedPdf.save();
     } catch (e) {
       print('Error merging PDFs: $e');
       return null;

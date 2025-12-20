@@ -45,7 +45,6 @@ dependencies:
   # PDF Generation
   pdf: ^3.11.1
   printing: ^5.13.2
-  pdf_combiner: ^3.4.0
   
   # Sharing
   share_plus: ^10.1.2

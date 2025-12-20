@@ -379,10 +379,11 @@
 - Home Users (receipts, important documents)
 
 **Competitive Positioning:**
-- **vs. Adobe Scan**: More features, better organization, free core
-- **vs. CamScanner**: Better privacy, faster, better UI
-- **vs. Microsoft Lens**: More features, better organization
-- **vs. Google Drive**: Better scanning, better organization, offline-first
+- **vs. Adobe Scan**: More features, better organization, 100% offline, free core
+- **vs. CamScanner**: Better privacy (no cloud required), faster, better UI, truly offline
+- **vs. Microsoft Lens**: More features, better organization, completely offline
+- **vs. Google Drive**: Better scanning, better organization, no cloud dependency, privacy-first
+- **vs. Other Document Apps**: Only app that works 100% offline with full feature set
 
 ---
 

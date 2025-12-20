@@ -592,6 +592,440 @@ class PdfService {
       ),
     );
   }
+
+  /// Splits a PDF into multiple PDFs based on page ranges
+  /// Returns list of split PDF bytes
+  Future<List<Uint8List>> splitPdfByRanges(
+    Uint8List pdfBytes,
+    List<PageRange> pageRanges,
+  ) async {
+    final splitPdfs = <Uint8List>[];
+
+    for (var range in pageRanges) {
+      final splitPdf = pw.Document();
+      int pageIndex = 0;
+
+      await for (var img in Printing.raster(pdfBytes, dpi: 150)) {
+        // Check if this page is in the range
+        if (pageIndex >= range.start && pageIndex <= range.end) {
+          try {
+            final imgBytes = await img.toPng();
+            final pdfImage = pw.MemoryImage(imgBytes);
+
+            splitPdf.addPage(
+              pw.Page(
+                pageFormat: PdfPageFormat.a4,
+                build: (pw.Context context) {
+                  return pw.Center(
+                    child: pw.Image(
+                      pdfImage,
+                      fit: pw.BoxFit.contain,
+                    ),
+                  );
+                },
+              ),
+            );
+          } catch (e) {
+            print('Error converting page ${pageIndex + 1} to image: $e');
+          }
+        }
+        pageIndex++;
+      }
+
+      splitPdfs.add(await splitPdf.save());
+    }
+
+    return splitPdfs;
+  }
+
+  /// Gets the page count of a PDF
+  Future<int> getPdfPageCount(Uint8List pdfBytes) async {
+    int count = 0;
+    await for (var _ in Printing.raster(pdfBytes, dpi: 72)) {
+      count++;
+    }
+    return count;
+  }
+
+  /// Shows PDF split dialog with page range selection
+  Future<void> showSplitPdfDialog(BuildContext context) async {
+    try {
+      // Show file picker to select PDF
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf'],
+        allowMultiple: false,
+      );
+
+      if (result == null || result.files.isEmpty) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('No PDF selected'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+        return;
+      }
+
+      final platformFile = result.files.first;
+      File? pdfFile;
+
+      if (platformFile.path != null) {
+        pdfFile = File(platformFile.path!);
+      } else if (platformFile.bytes != null) {
+        final directory = await getTemporaryDirectory();
+        pdfFile = File('${directory.path}/${platformFile.name}');
+        await pdfFile.writeAsBytes(platformFile.bytes!);
+      }
+
+      if (pdfFile == null) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Error reading PDF file'),
+              backgroundColor: Colors.red,
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+        return;
+      }
+
+      final pdfBytes = await pdfFile.readAsBytes();
+      final pdfFileName = platformFile.name.replaceAll('.pdf', '');
+
+      if (!context.mounted) return;
+
+      // Get page count
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+
+      final pageCount = await getPdfPageCount(pdfBytes);
+
+      if (!context.mounted) return;
+      Navigator.pop(context); // Close loading
+
+      if (pageCount == 0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not read PDF pages'),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 2),
+          ),
+        );
+        return;
+      }
+
+      // Show page range selection dialog
+      await _showPageRangeSelectionDialog(
+        context,
+        pdfBytes,
+        pdfFileName,
+        pageCount,
+      );
+    } catch (e) {
+      if (context.mounted) {
+        if (Navigator.canPop(context)) {
+          Navigator.pop(context);
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+
+  /// Shows page range selection dialog
+  Future<void> _showPageRangeSelectionDialog(
+    BuildContext context,
+    Uint8List pdfBytes,
+    String pdfFileName,
+    int pageCount,
+  ) async {
+    final pageRanges = <PageRange>[];
+
+    await showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            title: Text('Split PDF ($pageCount pages)'),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Select pages to extract:',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: 16),
+                  _PageRangeSelector(
+                    pageCount: pageCount,
+                    onRangesChanged: (ranges) {
+                      setState(() {
+                        pageRanges.clear();
+                        pageRanges.addAll(ranges);
+                      });
+                    },
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: pageRanges.isEmpty
+                    ? null
+                    : () async {
+                        Navigator.pop(context); // Close dialog
+
+                        if (!context.mounted) return;
+
+                        // Show loading
+                        showDialog(
+                          context: context,
+                          barrierDismissible: false,
+                          builder: (context) => const Center(
+                            child: CircularProgressIndicator(),
+                          ),
+                        );
+
+                        try {
+                          final splitPdfs = await splitPdfByRanges(
+                            pdfBytes,
+                            pageRanges,
+                          );
+
+                          if (!context.mounted) return;
+                          Navigator.pop(context); // Close loading
+
+                          // Show success and options
+                          await _showSplitPdfOptions(
+                            context,
+                            splitPdfs,
+                            pdfFileName,
+                            pageRanges,
+                          );
+                        } catch (e) {
+                          if (!context.mounted) return;
+                          if (Navigator.canPop(context)) {
+                            Navigator.pop(context);
+                          }
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Error splitting PDF: $e'),
+                              backgroundColor: Colors.red,
+                              duration: const Duration(seconds: 3),
+                            ),
+                          );
+                        }
+                      },
+                child: const Text('Split'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  /// Shows options for split PDFs (save/share)
+  Future<void> _showSplitPdfOptions(
+    BuildContext context,
+    List<Uint8List> splitPdfs,
+    String pdfFileName,
+    List<PageRange> pageRanges,
+  ) async {
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('PDF Split Successfully'),
+        content: Text(
+          'Created ${splitPdfs.length} PDF file(s). What would you like to do?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              // Share all split PDFs
+              for (var i = 0; i < splitPdfs.length; i++) {
+                final range = pageRanges[i];
+                final fileName = '${pdfFileName}_pages_${range.start + 1}-${range.end + 1}';
+                sharePdf(splitPdfs[i], fileName);
+              }
+            },
+            child: const Text('Share All'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Represents a page range for PDF splitting
+class PageRange {
+  final int start;
+  final int end;
+
+  PageRange(this.start, this.end);
+
+  @override
+  String toString() => 'Pages ${start + 1}-${end + 1}';
+}
+
+/// Widget for selecting page ranges
+class _PageRangeSelector extends StatefulWidget {
+  final int pageCount;
+  final Function(List<PageRange>) onRangesChanged;
+
+  const _PageRangeSelector({
+    required this.pageCount,
+    required this.onRangesChanged,
+  });
+
+  @override
+  State<_PageRangeSelector> createState() => _PageRangeSelectorState();
+}
+
+class _PageRangeSelectorState extends State<_PageRangeSelector> {
+  final List<PageRange> _ranges = [];
+  int? _startPage;
+  int? _endPage;
+
+  @override
+  void initState() {
+    super.initState();
+    // Default: select all pages as one range
+    _ranges.add(PageRange(0, widget.pageCount - 1));
+    widget.onRangesChanged(_ranges);
+  }
+
+  void _addRange() {
+    if (_startPage != null && _endPage != null) {
+      if (_startPage! <= _endPage! &&
+          _startPage! >= 0 &&
+          _endPage! < widget.pageCount) {
+        setState(() {
+          _ranges.add(PageRange(_startPage!, _endPage!));
+          _ranges.sort((a, b) => a.start.compareTo(b.start));
+          widget.onRangesChanged(_ranges);
+          _startPage = null;
+          _endPage = null;
+        });
+      }
+    }
+  }
+
+  void _removeRange(int index) {
+    setState(() {
+      _ranges.removeAt(index);
+      widget.onRangesChanged(_ranges);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Page range input
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                decoration: const InputDecoration(
+                  labelText: 'Start Page',
+                  border: OutlineInputBorder(),
+                  isDense: true,
+                ),
+                keyboardType: TextInputType.number,
+                onChanged: (value) {
+                  _startPage = int.tryParse(value);
+                  if (_startPage != null) {
+                    _startPage = _startPage! - 1; // Convert to 0-based
+                  }
+                },
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: TextField(
+                decoration: const InputDecoration(
+                  labelText: 'End Page',
+                  border: OutlineInputBorder(),
+                  isDense: true,
+                ),
+                keyboardType: TextInputType.number,
+                onChanged: (value) {
+                  _endPage = int.tryParse(value);
+                  if (_endPage != null) {
+                    _endPage = _endPage! - 1; // Convert to 0-based
+                  }
+                },
+              ),
+            ),
+            const SizedBox(width: 8),
+            IconButton(
+              icon: const Icon(Icons.add_rounded),
+              onPressed: _addRange,
+              tooltip: 'Add Range',
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        // Selected ranges list
+        if (_ranges.isEmpty)
+          Text(
+            'No ranges selected',
+            style: Theme.of(context).textTheme.bodySmall,
+          )
+        else
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxHeight: 200),
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: _ranges.length,
+              itemBuilder: (context, index) {
+                final range = _ranges[index];
+                return ListTile(
+                  dense: true,
+                  title: Text('Pages ${range.start + 1}-${range.end + 1}'),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.delete_outline, size: 20),
+                    onPressed: () => _removeRange(index),
+                  ),
+                );
+              },
+            ),
+          ),
+        const SizedBox(height: 8),
+        Text(
+          'Tip: Add multiple ranges to split into multiple PDFs',
+          style: Theme.of(context).textTheme.bodySmall,
+          textAlign: TextAlign.center,
+        ),
+      ],
+    );
+  }
 }
 
 final pdfService = PdfService();

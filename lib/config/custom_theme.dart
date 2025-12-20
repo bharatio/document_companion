@@ -183,6 +183,15 @@ class CustomTheme with ChangeNotifier {
   }
 
   static ThemeData get darkTheme {
+    // Dark mode color constants
+    const darkBackground = Color(0xFF111827);
+    const darkSurface = Color(0xFF1F2937);
+    const darkSurfaceVariant = Color(0xFF374151);
+    const darkTextPrimary = Color(0xFFFFFFFF);
+    const darkTextSecondary = Color(0xFFD1D5DB);
+    const darkTextTertiary = Color(0xFF9CA3AF);
+    const darkBorder = Color(0xFF374151);
+
     return ThemeData(
       useMaterial3: true,
       colorScheme: ColorScheme.fromSeed(
@@ -190,59 +199,154 @@ class CustomTheme with ChangeNotifier {
         brightness: Brightness.dark,
         primary: CustomColors.primaryLight,
         secondary: CustomColors.accent,
-        surface: const Color(0xFF1F2937),
-        background: const Color(0xFF111827),
+        surface: darkSurface,
+        background: darkBackground,
         error: CustomColors.error,
       ),
-      scaffoldBackgroundColor: const Color(0xFF111827),
+      scaffoldBackgroundColor: darkBackground,
       appBarTheme: AppBarTheme(
         elevation: 0,
         centerTitle: false,
-        backgroundColor: const Color(0xFF1F2937),
-        foregroundColor: Colors.white,
-        systemOverlayStyle: SystemUiOverlayStyle.light,
+        backgroundColor: darkSurface,
+        foregroundColor: darkTextPrimary,
+        systemOverlayStyle: SystemUiOverlayStyle.light.copyWith(
+          statusBarColor: darkSurface,
+        ),
         titleTextStyle: const TextStyle(
           fontSize: 20,
           fontWeight: FontWeight.w600,
-          color: Colors.white,
+          color: darkTextPrimary,
           letterSpacing: -0.5,
         ),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: darkSurfaceVariant,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: darkBorder),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: darkBorder),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: CustomColors.primaryLight, width: 2),
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       ),
       cardTheme: CardThemeData(
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: Colors.white.withOpacity(0.1), width: 1),
+          side: const BorderSide(color: darkBorder, width: 1),
         ),
-        color: const Color(0xFF1F2937),
+        color: darkSurface,
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          elevation: 0,
+          backgroundColor: CustomColors.primaryLight,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          textStyle: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.5,
+          ),
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: CustomColors.primaryLight,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: CustomColors.primaryLight,
+          side: const BorderSide(color: CustomColors.primaryLight),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      ),
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
+        elevation: 2,
+        backgroundColor: CustomColors.primaryLight,
+        foregroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
       ),
       textTheme: const TextTheme(
         displayLarge: TextStyle(
           fontSize: 32,
           fontWeight: FontWeight.bold,
-          color: Colors.white,
+          color: darkTextPrimary,
           letterSpacing: -1,
         ),
         displayMedium: TextStyle(
           fontSize: 28,
           fontWeight: FontWeight.bold,
-          color: Colors.white,
+          color: darkTextPrimary,
+          letterSpacing: -0.5,
+        ),
+        displaySmall: TextStyle(
+          fontSize: 24,
+          fontWeight: FontWeight.w600,
+          color: darkTextPrimary,
           letterSpacing: -0.5,
         ),
         headlineMedium: TextStyle(
           fontSize: 20,
           fontWeight: FontWeight.w600,
-          color: Colors.white,
+          color: darkTextPrimary,
           letterSpacing: -0.5,
+        ),
+        headlineSmall: TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+          color: darkTextPrimary,
+        ),
+        titleLarge: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+          color: darkTextPrimary,
+        ),
+        titleMedium: TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+          color: darkTextPrimary,
         ),
         bodyLarge: TextStyle(
           fontSize: 16,
-          color: Colors.white,
+          fontWeight: FontWeight.normal,
+          color: darkTextPrimary,
         ),
         bodyMedium: TextStyle(
           fontSize: 14,
-          color: Color(0xFF9CA3AF),
+          fontWeight: FontWeight.normal,
+          color: darkTextSecondary,
         ),
+        bodySmall: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.normal,
+          color: darkTextTertiary,
+        ),
+      ),
+      textSelectionTheme: const TextSelectionThemeData(
+        cursorColor: CustomColors.primaryLight,
+        selectionColor: CustomColors.primaryLight,
+        selectionHandleColor: CustomColors.primaryLight,
       ),
     );
   }

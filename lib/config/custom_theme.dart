@@ -5,7 +5,17 @@ import 'custom_colors.dart';
 
 class CustomTheme with ChangeNotifier {
   static bool _isDarkTheme = false;
+  static CustomTheme? _instance;
+  
+  CustomTheme._();
+  
+  factory CustomTheme() {
+    _instance ??= CustomTheme._();
+    return _instance!;
+  }
+  
   ThemeMode get currentTheme => _isDarkTheme ? ThemeMode.dark : ThemeMode.light;
+  bool get isDarkMode => _isDarkTheme;
 
   void toggleTheme() {
     _isDarkTheme = !_isDarkTheme;

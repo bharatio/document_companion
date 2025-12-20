@@ -1,4 +1,5 @@
 import 'package:document_companion/config/custom_colors.dart';
+import 'package:document_companion/config/custom_theme.dart';
 import 'package:document_companion/modules/home/bloc/current_image_bloc.dart';
 import 'package:document_companion/modules/home/bloc/folder_bloc.dart';
 import 'package:document_companion/modules/home/bloc/image_bloc.dart';
@@ -167,10 +168,51 @@ class _HomepageState extends State<Homepage> {
               icon: const Icon(Icons.search_rounded),
               tooltip: 'Search',
             ),
-            IconButton(
-              onPressed: () {},
+            PopupMenuButton<String>(
               icon: const Icon(Icons.more_vert_rounded),
               tooltip: 'More options',
+              onSelected: (value) {
+                if (value == 'theme') {
+                  final theme = CustomTheme();
+                  theme.toggleTheme();
+                } else if (value == 'settings') {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Settings coming soon'),
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
+                }
+              },
+              itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: 'theme',
+                  child: Row(
+                    children: [
+                      Icon(
+                        CustomTheme().isDarkMode
+                            ? Icons.light_mode_rounded
+                            : Icons.dark_mode_rounded,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        CustomTheme().isDarkMode ? 'Light Mode' : 'Dark Mode',
+                      ),
+                    ],
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'settings',
+                  child: Row(
+                    children: [
+                      Icon(Icons.settings_rounded, size: 20),
+                      SizedBox(width: 12),
+                      Text('Settings'),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ],
         ],

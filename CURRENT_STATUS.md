@@ -42,11 +42,14 @@
 - [ ] Performance optimization needed for large image sets
 
 ### Missing Features
-- [ ] File import from gallery
-- [ ] Search functionality
-- [ ] Sorting/filtering
+- [x] File import from gallery ✅
+- [x] Search functionality ✅
+- [x] Sorting functionality ✅
+- [ ] Filtering (date range)
 - [ ] Tags system
 - [ ] Batch operations
+- [ ] Search within folder page
+- [ ] Folder options menu
 
 ---
 
@@ -64,6 +67,9 @@
 - ✅ Improved BLoC listeners
 - ✅ Better error handling
 - ✅ Loading states added
+- ✅ Fixed cropping with fallback rectangular crop
+- ✅ Fixed service button text visibility
+- ✅ Fixed RenderFlex overflow issues
 
 ---
 
@@ -75,9 +81,13 @@
 | Folder Management | ✅ 100% | High | - |
 | PDF Conversion | ✅ 100% | High | - |
 | Image Saving | ✅ 100% | High | - |
-| File Import | ❌ 0% | High | 2-3 days |
-| Search | ❌ 0% | High | 2-3 days |
-| Sorting/Filtering | ❌ 0% | Medium | 2-3 days |
+| File Import | ✅ 100% | High | - |
+| Search | ✅ 100% | High | - |
+| Sorting | ✅ 100% | Medium | - |
+| Filtering | ❌ 0% | Medium | 1-2 days |
+| Document Viewer | ✅ 100% | High | - |
+| Document Operations | ✅ 100% | High | - |
+| Document Sharing | ✅ 100% | High | - |
 | Tags System | ❌ 0% | Medium | 3-4 days |
 | OCR | ❌ 0% | Low | 1-2 weeks |
 | Cloud Storage | ❌ 0% | Low | 2-3 weeks |
@@ -142,11 +152,14 @@
 ## 💡 Feature Requests (From Analysis)
 
 ### High Priority
-1. File import from gallery
-2. Search functionality
-3. Document renaming
-4. Document deletion
-5. Move documents between folders
+1. ✅ File import from gallery
+2. ✅ Search functionality
+3. ✅ Document renaming
+4. ✅ Document deletion
+5. ✅ Document sharing
+6. ✅ Document viewer with zoom
+7. Move documents between folders
+8. Search within folder page
 
 ### Medium Priority
 1. Tags system
@@ -200,5 +213,24 @@
 ---
 
 *Status: Active Development*
-*Last Updated: [Current Date]*
+*Last Updated: 2024-12-19*
+
+## 🎉 Recently Completed Features
+
+### Document Management (Completed Today)
+- ✅ **Document Viewer** - Full-screen image viewer with zoom (0.5x-4x) and pan
+- ✅ **Document Operations** - Rename, Share, Delete with confirmation dialogs
+- ✅ **Document Sharing** - Share documents via system share sheet
+- ✅ **Long Press Actions** - Quick delete via long press on grid cards
+
+### File Management (Completed Previously)
+- ✅ **File Import** - Import single/multiple images from gallery
+- ✅ **Search** - Real-time folder name search with clear button
+- ✅ **Sorting** - Sort folders by name, date created, date modified (ascending/descending)
+- ✅ **Document Count** - Display actual document count in folder cards
+
+### UI/UX Improvements (Completed Previously)
+- ✅ **Service Buttons** - All shortcut buttons functional with proper text visibility
+- ✅ **Crop Fallback** - Rectangular crop fallback when native perspective adjustment fails
+- ✅ **Error Handling** - Comprehensive error handling with user-friendly messages
 

@@ -22,7 +22,24 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  CustomTheme currentTheme = CustomTheme();
+  late final CustomTheme currentTheme;
+
+  @override
+  void initState() {
+    super.initState();
+    currentTheme = CustomTheme();
+    currentTheme.addListener(_onThemeChanged);
+  }
+
+  @override
+  void dispose() {
+    currentTheme.removeListener(_onThemeChanged);
+    super.dispose();
+  }
+
+  void _onThemeChanged() {
+    setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {

@@ -480,16 +480,21 @@
 ### Week 1-2 Focus
 1. ✅ Fix crop button (DONE)
 2. ✅ Fix UI distortion (DONE)
-3. [ ] Implement file import from gallery
-4. [ ] Add search functionality
-5. [ ] Improve folder page with document count
+3. ✅ Implement file import from gallery (DONE)
+4. ✅ Add search functionality (DONE)
+5. ✅ Improve folder page with document count (DONE)
+6. ✅ Document viewer with zoom (DONE)
+7. ✅ Document operations - rename, share, delete (DONE)
 
 ### Week 3-4 Focus
-1. [ ] Implement sorting and filtering
-2. [ ] Add tags system
-3. [ ] Batch operations
-4. [ ] Document viewer improvements
-5. [ ] Performance optimization
+1. ✅ Implement sorting (DONE)
+2. [ ] Implement filtering (date range)
+3. [ ] Add tags system
+4. [ ] Batch operations
+5. ✅ Document viewer improvements (DONE)
+6. [ ] Search within folder page
+7. [ ] Folder options menu
+8. [ ] Performance optimization
 
 ---
 

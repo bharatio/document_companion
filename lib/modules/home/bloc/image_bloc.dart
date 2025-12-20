@@ -9,13 +9,38 @@ class ImageBloc {
   
   Stream<List<ImageModel>> get imageStream => _imageController.stream;
 
+  List<ImageModel> _allImages = [];
+  String _searchQuery = '';
+
   Future<void> fetchImagesByFolderId(String folderId) async {
     try {
-      final images = await imageDatabaseHandler.getImagesByFolderId(folderId);
-      _imageController.sink.add(images);
+      _allImages = await imageDatabaseHandler.getImagesByFolderId(folderId);
+      _applySearch();
     } catch (e) {
       print('Error fetching images: $e');
+      _allImages = [];
       _imageController.sink.add([]);
+    }
+  }
+
+  void searchImages(String query) {
+    _searchQuery = query.toLowerCase();
+    _applySearch();
+  }
+
+  void clearSearch() {
+    _searchQuery = '';
+    _applySearch();
+  }
+
+  void _applySearch() {
+    if (_searchQuery.isEmpty) {
+      _imageController.sink.add(_allImages);
+    } else {
+      final filtered = _allImages.where((image) {
+        return image.name.toLowerCase().contains(_searchQuery);
+      }).toList();
+      _imageController.sink.add(filtered);
     }
   }
 

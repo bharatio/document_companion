@@ -34,6 +34,25 @@ class FolderTableHandler {
       );
     });
   }
+
+  Future<void> updateFolder(FolderModel folder) async {
+    final _database = await localDatabaseHandler.db;
+    await _database?.update(
+      _tableName,
+      folder.toMap(),
+      where: 'id = ?',
+      whereArgs: [folder.id],
+    );
+  }
+
+  Future<void> deleteFolder(String folderId) async {
+    final _database = await localDatabaseHandler.db;
+    await _database?.delete(
+      _tableName,
+      where: 'id = ?',
+      whereArgs: [folderId],
+    );
+  }
 }
 
 final folderTableHandler = FolderTableHandler();

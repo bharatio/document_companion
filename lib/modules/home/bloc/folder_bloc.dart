@@ -91,6 +91,23 @@ class FolderBloc {
     _searchQuery = '';
     _applyFilters();
   }
+
+  Future<void> updateFolder(String folderId, String newName) async {
+    final folder = _allFolders.firstWhere((f) => f.id == folderId);
+    final updatedFolder = FolderModel(
+      id: folder.id,
+      folder_name: newName,
+      created_on: folder.created_on,
+      modified_on: DateTime.now().millisecondsSinceEpoch.toString(),
+    );
+    await folderTableHandler.updateFolder(updatedFolder);
+    await fetchFolders();
+  }
+
+  Future<void> deleteFolder(String folderId) async {
+    await folderTableHandler.deleteFolder(folderId);
+    await fetchFolders();
+  }
 }
 
 final folderBloc = FolderBloc();

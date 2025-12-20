@@ -3,6 +3,9 @@ import 'dart:async';
 import 'package:document_companion/config/custom_colors.dart';
 import 'package:document_companion/local_database/models/image_model.dart';
 import 'package:document_companion/modules/home/bloc/image_bloc.dart';
+import 'package:document_companion/modules/home/services/document_service.dart';
+import 'package:document_companion/modules/home/services/folder_service.dart';
+import 'package:document_companion/modules/home/view/document_viewer_page.dart';
 import 'package:document_companion/modules/scan/view/scan.dart';
 import 'package:flutter/material.dart';
 
@@ -19,6 +22,8 @@ class FolderPage extends StatefulWidget {
 
 class _FolderPageState extends State<FolderPage> {
   bool _isGridView = true;
+  bool _isSearching = false;
+  final TextEditingController _searchController = TextEditingController();
   StreamSubscription<List<ImageModel>>? _imageSubscription;
   int _imageCount = 0;
 
@@ -32,7 +37,22 @@ class _FolderPageState extends State<FolderPage> {
   @override
   void dispose() {
     _imageSubscription?.cancel();
+    _searchController.dispose();
     super.dispose();
+  }
+
+  void _toggleSearch() {
+    setState(() {
+      _isSearching = !_isSearching;
+      if (!_isSearching) {
+        _searchController.clear();
+        imageBloc.clearSearch();
+      }
+    });
+  }
+
+  void _onSearchChanged(String query) {
+    imageBloc.searchImages(query);
   }
 
   Future<void> _loadImages() async {
@@ -59,60 +79,108 @@ class _FolderPageState extends State<FolderPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: CustomColors.primary.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                Icons.folder_rounded,
-                color: CustomColors.primary,
-                size: 24,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    widget.folder.folder_name,
-                    style: Theme.of(context).textTheme.titleLarge,
-                    overflow: TextOverflow.ellipsis,
+        title: _isSearching
+            ? TextField(
+                controller: _searchController,
+                autofocus: true,
+                decoration: InputDecoration(
+                  hintText: 'Search documents...',
+                  border: InputBorder.none,
+                  suffixIcon: IconButton(
+                    icon: const Icon(Icons.clear_rounded),
+                    onPressed: () {
+                      _searchController.clear();
+                      imageBloc.clearSearch();
+                      _toggleSearch();
+                    },
                   ),
-                  Text(
-                    '$_imageCount ${_imageCount == 1 ? 'document' : 'documents'}',
-                    style: Theme.of(context).textTheme.bodySmall,
+                ),
+                onChanged: _onSearchChanged,
+              )
+            : Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: CustomColors.primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      Icons.folder_rounded,
+                      color: CustomColors.primary,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.folder.folder_name,
+                          style: Theme.of(context).textTheme.titleLarge,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Text(
+                          '$_imageCount ${_imageCount == 1 ? 'document' : 'documents'}',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
+        actions: [
+          if (!_isSearching) ...[
+            IconButton(
+              onPressed: () {
+                setState(() {
+                  _isGridView = !_isGridView;
+                });
+              },
+              icon: Icon(_isGridView ? Icons.view_list_rounded : Icons.grid_view_rounded),
+              tooltip: _isGridView ? 'List view' : 'Grid view',
+            ),
+            IconButton(
+              onPressed: _toggleSearch,
+              icon: const Icon(Icons.search_rounded),
+              tooltip: 'Search',
+            ),
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.more_vert_rounded),
+              tooltip: 'More options',
+              onSelected: (value) {
+                if (value == 'rename') {
+                  folderService.showRenameDialog(context, widget.folder);
+                } else if (value == 'delete') {
+                  folderService.showDeleteConfirmation(context, widget.folder);
+                }
+              },
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'rename',
+                  child: Row(
+                    children: [
+                      Icon(Icons.edit_rounded, size: 20),
+                      SizedBox(width: 12),
+                      Text('Rename Folder'),
+                    ],
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'delete',
+                  child: Row(
+                    children: [
+                      Icon(Icons.delete_rounded, color: Colors.red, size: 20),
+                      SizedBox(width: 12),
+                      Text('Delete Folder', style: TextStyle(color: Colors.red)),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ],
-        ),
-        actions: [
-          IconButton(
-            onPressed: () {
-              setState(() {
-                _isGridView = !_isGridView;
-              });
-            },
-            icon: Icon(_isGridView ? Icons.view_list_rounded : Icons.grid_view_rounded),
-            tooltip: _isGridView ? 'List view' : 'Grid view',
-          ),
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.search_rounded),
-            tooltip: 'Search',
-          ),
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.more_vert_rounded),
-            tooltip: 'More options',
-          ),
         ],
       ),
       body: StreamBuilder<List<ImageModel>>(
@@ -126,6 +194,7 @@ class _FolderPageState extends State<FolderPage> {
             return _ImageGridView(
               images: images,
               isGridView: _isGridView,
+              folderId: widget.folder.id,
             );
           }
           return const Center(child: CircularProgressIndicator());
@@ -145,10 +214,12 @@ class _FolderPageState extends State<FolderPage> {
 class _ImageGridView extends StatelessWidget {
   final List<ImageModel> images;
   final bool isGridView;
+  final String folderId;
 
   const _ImageGridView({
     required this.images,
     required this.isGridView,
+    required this.folderId,
   });
 
   @override
@@ -164,7 +235,12 @@ class _ImageGridView extends StatelessWidget {
         ),
         itemCount: images.length,
         itemBuilder: (context, index) {
-          return _ImageCard(image: images[index]);
+          return _ImageCard(
+            image: images[index],
+            folderId: folderId,
+            images: images,
+            index: index,
+          );
         },
       );
     } else {
@@ -172,7 +248,12 @@ class _ImageGridView extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         itemCount: images.length,
         itemBuilder: (context, index) {
-          return _ImageListTile(image: images[index]);
+          return _ImageListTile(
+            image: images[index],
+            folderId: folderId,
+            images: images,
+            index: index,
+          );
         },
       );
     }
@@ -181,15 +262,34 @@ class _ImageGridView extends StatelessWidget {
 
 class _ImageCard extends StatelessWidget {
   final ImageModel image;
+  final String folderId;
+  final List<ImageModel> images;
+  final int index;
 
-  const _ImageCard({required this.image});
+  const _ImageCard({
+    required this.image,
+    required this.folderId,
+    required this.images,
+    required this.index,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Card(
       child: InkWell(
         onTap: () {
-          // TODO: Open image viewer
+          Navigator.pushNamed(
+            context,
+            DocumentViewerPage.route,
+            arguments: {
+              'images': images,
+              'initialIndex': index,
+              'folderId': folderId,
+            },
+          );
+        },
+        onLongPress: () {
+          documentService.showDeleteConfirmation(context, image, folderId);
         },
         borderRadius: BorderRadius.circular(16),
         child: Column(
@@ -231,8 +331,16 @@ class _ImageCard extends StatelessWidget {
 
 class _ImageListTile extends StatelessWidget {
   final ImageModel image;
+  final String folderId;
+  final List<ImageModel> images;
+  final int index;
 
-  const _ImageListTile({required this.image});
+  const _ImageListTile({
+    required this.image,
+    required this.folderId,
+    required this.images,
+    required this.index,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -259,11 +367,26 @@ class _ImageListTile extends StatelessWidget {
         trailing: IconButton(
           icon: const Icon(Icons.more_vert_rounded),
           onPressed: () {
-            // TODO: Show options menu
+            showModalBottomSheet(
+              context: context,
+              backgroundColor: Colors.transparent,
+              builder: (context) => _DocumentOptionsSheet(
+                image: image,
+                folderId: folderId,
+              ),
+            );
           },
         ),
         onTap: () {
-          // TODO: Open image viewer
+          Navigator.pushNamed(
+            context,
+            DocumentViewerPage.route,
+            arguments: {
+              'images': images,
+              'initialIndex': index,
+              'folderId': folderId,
+            },
+          );
         },
       ),
     );
@@ -313,7 +436,7 @@ class _EmptyFolderState extends StatelessWidget {
               children: [
                 OutlinedButton.icon(
                   onPressed: () {
-                    // TODO: Navigate to scan
+                    Navigator.pushNamed(context, Scan.route);
                   },
                   icon: const Icon(Icons.camera_alt_rounded),
                   label: const Text('Scan'),
@@ -321,13 +444,76 @@ class _EmptyFolderState extends StatelessWidget {
                 const SizedBox(width: 12),
                 OutlinedButton.icon(
                   onPressed: () {
-                    // TODO: Navigate to import
+                    // Import functionality can be accessed from homepage
+                    Navigator.pop(context);
                   },
                   icon: const Icon(Icons.file_upload_rounded),
                   label: const Text('Import'),
                 ),
               ],
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DocumentOptionsSheet extends StatelessWidget {
+  final ImageModel image;
+  final String folderId;
+
+  const _DocumentOptionsSheet({
+    required this.image,
+    required this.folderId,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Drag Handle
+            Container(
+              margin: const EdgeInsets.only(top: 12, bottom: 8),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.edit_rounded),
+              title: const Text('Rename'),
+              onTap: () {
+                Navigator.pop(context);
+                documentService.showRenameDialog(context, image, folderId);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.share_rounded),
+              title: const Text('Share'),
+              onTap: () {
+                Navigator.pop(context);
+                documentService.shareDocument(context, image);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.delete_rounded, color: Colors.red),
+              title: const Text('Delete', style: TextStyle(color: Colors.red)),
+              onTap: () {
+                Navigator.pop(context);
+                documentService.showDeleteConfirmation(context, image, folderId);
+              },
+            ),
+            const SizedBox(height: 8),
           ],
         ),
       ),

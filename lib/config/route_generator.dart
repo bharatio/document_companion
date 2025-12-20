@@ -1,3 +1,5 @@
+import 'package:document_companion/local_database/models/image_model.dart';
+import 'package:document_companion/modules/home/view/document_viewer_page.dart';
 import 'package:document_companion/modules/home/view/homepage.dart';
 import 'package:document_companion/modules/home/view/images_preview.dart';
 import 'package:flutter/material.dart';
@@ -29,6 +31,16 @@ class RouteGenerator {
       case ImagesPreview.route:
         return MaterialPageRoute(
           builder: (_) => ImagesPreview(),
+          settings: settings,
+        );
+      case DocumentViewerPage.route:
+        final args = settings.arguments as Map<String, dynamic>;
+        return MaterialPageRoute(
+          builder: (_) => DocumentViewerPage(
+            images: args['images'] as List<ImageModel>,
+            initialIndex: args['initialIndex'] as int? ?? 0,
+            folderId: args['folderId'] as String,
+          ),
           settings: settings,
         );
       default:

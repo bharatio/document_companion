@@ -15,6 +15,11 @@ class Constant {
       "/",
     ),
     ServiceOperation(
+      Icons.call_split_rounded,
+      'Split PDF',
+      "/",
+    ),
+    ServiceOperation(
       Icons.compress_outlined,
       'File Compress',
       "/",

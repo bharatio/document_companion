@@ -61,7 +61,10 @@ class _HomepageState extends State<Homepage> {
       case 1: // Merge PDF
         pdfService.showMergePdfDialog(context);
         break;
-      case 2: // File Compress
+      case 2: // Split PDF
+        pdfService.showSplitPdfDialog(context);
+        break;
+      case 3: // File Compress
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('File compression feature coming soon'),
@@ -69,10 +72,10 @@ class _HomepageState extends State<Homepage> {
           ),
         );
         break;
-      case 3: // Image to PDF
+      case 4: // Image to PDF
         _handleImageToPdf(context);
         break;
-      case 4: // Import PDF
+      case 5: // Import PDF
         pdfService.showImportPdfDialog(context);
         break;
     }

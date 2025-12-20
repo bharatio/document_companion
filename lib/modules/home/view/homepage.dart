@@ -406,10 +406,7 @@ class _ServiceCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: Theme.of(context).dividerColor,
-            width: 1,
-          ),
+          border: Border.all(color: Theme.of(context).dividerColor, width: 1),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

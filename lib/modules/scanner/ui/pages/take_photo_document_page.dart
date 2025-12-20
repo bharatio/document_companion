@@ -12,9 +12,9 @@ class TakePhotoDocumentPage extends StatelessWidget {
   final TakePhotoDocumentStyle takePhotoDocumentStyle;
 
   const TakePhotoDocumentPage({
-    Key? key,
+    super.key,
     required this.takePhotoDocumentStyle,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -45,10 +45,7 @@ class TakePhotoDocumentPage extends StatelessWidget {
 class _CameraPreview extends StatefulWidget {
   final TakePhotoDocumentStyle takePhotoDocumentStyle;
 
-  const _CameraPreview({
-    Key? key,
-    required this.takePhotoDocumentStyle,
-  }) : super(key: key);
+  const _CameraPreview({required this.takePhotoDocumentStyle});
 
   @override
   State<_CameraPreview> createState() => _CameraPreviewState();
@@ -63,9 +60,7 @@ class _CameraPreviewState extends State<_CameraPreview> {
       selector: (state) => state.cameraController,
       builder: (context, state) {
         if (state == null) {
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
+          return const Center(child: CircularProgressIndicator());
         }
 
         return SizedBox.expand(
@@ -73,10 +68,8 @@ class _CameraPreviewState extends State<_CameraPreview> {
             fit: StackFit.expand,
             children: [
               // Camera Preview - fills entire screen
-              SizedBox.expand(
-                child: CameraPreview(state),
-              ),
-              
+              SizedBox.expand(child: CameraPreview(state)),
+
               // Top bar with close button
               Positioned(
                 top: 0,
@@ -92,7 +85,7 @@ class _CameraPreviewState extends State<_CameraPreview> {
                         // Close button
                         Container(
                           decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.5),
+                            color: Colors.black.withValues(alpha: 0.5),
                             shape: BoxShape.circle,
                           ),
                           child: IconButton(
@@ -106,11 +99,11 @@ class _CameraPreviewState extends State<_CameraPreview> {
                             ),
                           ),
                         ),
-                        
+
                         // Flash toggle
                         Container(
                           decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.5),
+                            color: Colors.black.withValues(alpha: 0.5),
                             shape: BoxShape.circle,
                           ),
                           child: IconButton(

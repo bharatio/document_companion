@@ -6,14 +6,14 @@ import 'custom_colors.dart';
 class CustomTheme with ChangeNotifier {
   static bool _isDarkTheme = false;
   static CustomTheme? _instance;
-  
+
   CustomTheme._();
-  
+
   factory CustomTheme() {
     _instance ??= CustomTheme._();
     return _instance!;
   }
-  
+
   ThemeMode get currentTheme => _isDarkTheme ? ThemeMode.dark : ThemeMode.light;
   bool get isDarkMode => _isDarkTheme;
 
@@ -31,7 +31,6 @@ class CustomTheme with ChangeNotifier {
         primary: CustomColors.primary,
         secondary: CustomColors.accent,
         surface: CustomColors.surface,
-        background: CustomColors.background,
         error: CustomColors.error,
       ),
       scaffoldBackgroundColor: CustomColors.background,
@@ -65,7 +64,10 @@ class CustomTheme with ChangeNotifier {
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: CustomColors.primary, width: 2),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 16,
+        ),
       ),
       cardTheme: CardThemeData(
         elevation: 0,
@@ -95,9 +97,7 @@ class CustomTheme with ChangeNotifier {
         style: TextButton.styleFrom(
           foregroundColor: CustomColors.primary,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -114,9 +114,7 @@ class CustomTheme with ChangeNotifier {
         elevation: 2,
         backgroundColor: CustomColors.primary,
         foregroundColor: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
       textTheme: const TextTheme(
         displayLarge: TextStyle(
@@ -200,7 +198,6 @@ class CustomTheme with ChangeNotifier {
         primary: CustomColors.primaryLight,
         secondary: CustomColors.accent,
         surface: darkSurface,
-        background: darkBackground,
         error: CustomColors.error,
       ),
       scaffoldBackgroundColor: darkBackground,
@@ -232,9 +229,15 @@ class CustomTheme with ChangeNotifier {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: CustomColors.primaryLight, width: 2),
+          borderSide: const BorderSide(
+            color: CustomColors.primaryLight,
+            width: 2,
+          ),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 16,
+        ),
       ),
       cardTheme: CardThemeData(
         elevation: 0,
@@ -264,9 +267,7 @@ class CustomTheme with ChangeNotifier {
         style: TextButton.styleFrom(
           foregroundColor: CustomColors.primaryLight,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -283,9 +284,7 @@ class CustomTheme with ChangeNotifier {
         elevation: 2,
         backgroundColor: CustomColors.primaryLight,
         foregroundColor: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
       textTheme: const TextTheme(
         displayLarge: TextStyle(

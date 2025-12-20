@@ -9,14 +9,12 @@ import '../../utils/edit_photo_document_style.dart';
 class BottomBarEditPhoto extends StatelessWidget {
   final EditPhotoDocumentStyle editPhotoDocumentStyle;
 
-  const BottomBarEditPhoto({
-    Key? key,
-    required this.editPhotoDocumentStyle,
-  }) : super(key: key);
+  const BottomBarEditPhoto({super.key, required this.editPhotoDocumentStyle});
 
   @override
   Widget build(BuildContext context) {
-    if (editPhotoDocumentStyle.hideBottomBarDefault) return const SizedBox.shrink();
+    if (editPhotoDocumentStyle.hideBottomBarDefault)
+      return const SizedBox.shrink();
 
     return Positioned(
       bottom: 0,
@@ -28,12 +26,10 @@ class BottomBarEditPhoto extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
           decoration: BoxDecoration(
             color: CustomColors.surface,
-            borderRadius: const BorderRadius.vertical(
-              top: Radius.circular(24),
-            ),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
+                color: Colors.black.withValues(alpha: 0.1),
                 blurRadius: 20,
                 offset: const Offset(0, -5),
               ),
@@ -43,7 +39,7 @@ class BottomBarEditPhoto extends StatelessWidget {
             stream: context.read<DocumentScannerController>().currentFilterType,
             builder: (context, AsyncSnapshot<FilterType> snapshot) {
               final currentFilter = snapshot.data ?? FilterType.natural;
-              
+
               return Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
@@ -103,13 +99,11 @@ class _FilterButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         decoration: BoxDecoration(
           color: isSelected
-              ? CustomColors.primary.withOpacity(0.1)
+              ? CustomColors.primary.withValues(alpha: 0.1)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected
-                ? CustomColors.primary
-                : CustomColors.border,
+            color: isSelected ? CustomColors.primary : CustomColors.border,
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -127,11 +121,11 @@ class _FilterButton extends StatelessWidget {
             Text(
               label,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: isSelected
-                        ? CustomColors.primary
-                        : CustomColors.textSecondary,
-                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                  ),
+                color: isSelected
+                    ? CustomColors.primary
+                    : CustomColors.textSecondary,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+              ),
             ),
           ],
         ),

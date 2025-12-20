@@ -11,7 +11,7 @@ import 'package:uuid/uuid.dart';
 import '../models/folder_selection_model.dart';
 
 class SaveImageBottomSheet extends StatefulWidget {
-  const SaveImageBottomSheet({Key? key}) : super(key: key);
+  const SaveImageBottomSheet({super.key});
 
   @override
   State<SaveImageBottomSheet> createState() => _SaveImageBottomSheetState();
@@ -27,11 +27,9 @@ class _SaveImageBottomSheetState extends State<SaveImageBottomSheet> {
     folderBloc.fetchFolders();
     folderBloc.folderList.listen((event) {
       folderList.clear();
-      event.forEach((element) {
-        folderList.add(
-          FolderSelectionModel(element, false),
-        );
-      });
+      for (var element in event) {
+        folderList.add(FolderSelectionModel(element, false));
+      }
       if (mounted) {
         setState(() {});
       }
@@ -58,12 +56,12 @@ class _SaveImageBottomSheetState extends State<SaveImageBottomSheet> {
     try {
       // Get current images
       final currentImages = await currentImageBloc.getCurrentImagesList();
-      
+
       if (currentImages.isEmpty) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('No images to save')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('No images to save')));
         }
         return;
       }
@@ -110,9 +108,9 @@ class _SaveImageBottomSheetState extends State<SaveImageBottomSheet> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error saving images: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error saving images: $e')));
       }
     } finally {
       if (mounted) {
@@ -126,9 +124,7 @@ class _SaveImageBottomSheetState extends State<SaveImageBottomSheet> {
     return Container(
       decoration: BoxDecoration(
         color: CustomColors.surface,
-        borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(24),
-        ),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -204,7 +200,9 @@ class _SaveImageBottomSheetState extends State<SaveImageBottomSheet> {
                                 Container(
                                   padding: const EdgeInsets.all(8),
                                   decoration: BoxDecoration(
-                                    color: CustomColors.primary.withOpacity(0.1),
+                                    color: CustomColors.primary.withValues(
+                                      alpha: 0.1,
+                                    ),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: Icon(
@@ -216,15 +214,20 @@ class _SaveImageBottomSheetState extends State<SaveImageBottomSheet> {
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        folder.folder_name,
-                                        style: Theme.of(context).textTheme.titleMedium,
+                                        folder.folderName,
+                                        style: Theme.of(
+                                          context,
+                                        ).textTheme.titleMedium,
                                       ),
                                       Text(
-                                        folder.created_on,
-                                        style: Theme.of(context).textTheme.bodySmall,
+                                        folder.createdOn,
+                                        style: Theme.of(
+                                          context,
+                                        ).textTheme.bodySmall,
                                       ),
                                     ],
                                   ),
@@ -233,13 +236,15 @@ class _SaveImageBottomSheetState extends State<SaveImageBottomSheet> {
                             ),
                             onTap: () {
                               setState(() {
-                                folderModel.isSelected = !folderModel.isSelected;
+                                folderModel.isSelected =
+                                    !folderModel.isSelected;
                               });
                             },
                           ),
                         );
                       },
-                      separatorBuilder: (context, index) => const SizedBox(height: 8),
+                      separatorBuilder: (context, index) =>
+                          const SizedBox(height: 8),
                     ),
                   ),
                 const SizedBox(height: 24),
@@ -253,7 +258,9 @@ class _SaveImageBottomSheetState extends State<SaveImageBottomSheet> {
                             height: 20,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
                             ),
                           )
                         : const Icon(Icons.save_rounded),

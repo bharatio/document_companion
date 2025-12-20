@@ -4,17 +4,17 @@ import 'package:flutter/material.dart';
 
 class DocumentViewerPage extends StatefulWidget {
   static const route = '/document_viewer';
-  
+
   final List<ImageModel> images;
   final int initialIndex;
   final String folderId;
 
   const DocumentViewerPage({
-    Key? key,
+    super.key,
     required this.images,
     this.initialIndex = 0,
     required this.folderId,
-  }) : super(key: key);
+  });
 
   @override
   State<DocumentViewerPage> createState() => _DocumentViewerPageState();
@@ -23,7 +23,8 @@ class DocumentViewerPage extends StatefulWidget {
 class _DocumentViewerPageState extends State<DocumentViewerPage> {
   late PageController _pageController;
   late int _currentIndex;
-  final TransformationController _transformationController = TransformationController();
+  final TransformationController _transformationController =
+      TransformationController();
 
   @override
   void initState() {
@@ -43,10 +44,8 @@ class _DocumentViewerPageState extends State<DocumentViewerPage> {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (context) => _DocumentOptionsSheet(
-        image: image,
-        folderId: widget.folderId,
-      ),
+      builder: (context) =>
+          _DocumentOptionsSheet(image: image, folderId: widget.folderId),
     );
   }
 
@@ -84,10 +83,7 @@ class _DocumentViewerPageState extends State<DocumentViewerPage> {
             minScale: 0.5,
             maxScale: 4.0,
             child: Center(
-              child: Image.memory(
-                image.image,
-                fit: BoxFit.contain,
-              ),
+              child: Image.memory(image.image, fit: BoxFit.contain),
             ),
           );
         },
@@ -100,10 +96,7 @@ class _DocumentOptionsSheet extends StatelessWidget {
   final ImageModel image;
   final String folderId;
 
-  const _DocumentOptionsSheet({
-    required this.image,
-    required this.folderId,
-  });
+  const _DocumentOptionsSheet({required this.image, required this.folderId});
 
   @override
   Widget build(BuildContext context) {
@@ -155,7 +148,11 @@ class _DocumentOptionsSheet extends StatelessWidget {
               title: const Text('Delete', style: TextStyle(color: Colors.red)),
               onTap: () {
                 Navigator.pop(context);
-                documentService.showDeleteConfirmation(context, image, folderId);
+                documentService.showDeleteConfirmation(
+                  context,
+                  image,
+                  folderId,
+                );
               },
             ),
             const SizedBox(height: 8),
@@ -165,4 +162,3 @@ class _DocumentOptionsSheet extends StatelessWidget {
     );
   }
 }
-

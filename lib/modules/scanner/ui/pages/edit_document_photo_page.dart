@@ -21,28 +21,30 @@ class EditDocumentPhotoPage extends StatelessWidget {
   final OnSave onSave;
 
   const EditDocumentPhotoPage({
-    Key? key,
+    super.key,
     required this.editPhotoDocumentStyle,
     required this.onSave,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () => _onPop(context),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) {
+          _onPop(context);
+        }
+      },
       child: BlocSelector<AppBloc, AppState, Uint8List?>(
         selector: (state) => state.pictureCropped,
         builder: (context, state) {
           if (state == null) {
-            return const Center(
-              child: Text("NO IMAGE"),
-            );
+            return const Center(child: Text("NO IMAGE"));
           }
 
           return BlocProvider(
-            create: (context) => EditBloc(
-              imageUtils: ImageUtils(),
-            )..add(EditStarted(state)),
+            create: (context) =>
+                EditBloc(imageUtils: ImageUtils())..add(EditStarted(state)),
             child: _EditView(
               editPhotoDocumentStyle: editPhotoDocumentStyle,
               onSave: onSave,
@@ -63,11 +65,7 @@ class _EditView extends StatelessWidget {
   final EditPhotoDocumentStyle editPhotoDocumentStyle;
   final OnSave onSave;
 
-  const _EditView({
-    Key? key,
-    required this.editPhotoDocumentStyle,
-    required this.onSave,
-  }) : super(key: key);
+  const _EditView({required this.editPhotoDocumentStyle, required this.onSave});
 
   @override
   Widget build(BuildContext context) {
@@ -77,9 +75,9 @@ class _EditView extends StatelessWidget {
           listenWhen: (previous, current) =>
               current.currentFilterType != previous.currentFilterType,
           listener: (context, state) {
-            context
-                .read<EditBloc>()
-                .add(EditFilterChanged(state.currentFilterType));
+            context.read<EditBloc>().add(
+              EditFilterChanged(state.currentFilterType),
+            );
           },
         ),
         BlocListener<AppBloc, AppState>(
@@ -90,19 +88,11 @@ class _EditView extends StatelessWidget {
             if (state.statusSavePhotoDocument == AppStatus.loading) {
               final image = context.read<EditBloc>().state.image;
               if (image == null) {
-                context.read<AppBloc>().add(
-                      AppDocumentSaved(
-                        isSucces: false,
-                      ),
-                    );
+                context.read<AppBloc>().add(AppDocumentSaved(isSucces: false));
                 return;
               }
 
-              context.read<AppBloc>().add(
-                    AppDocumentSaved(
-                      isSucces: true,
-                    ),
-                  );
+              context.read<AppBloc>().add(AppDocumentSaved(isSucces: true));
               onSave(image);
             }
           },
@@ -113,10 +103,8 @@ class _EditView extends StatelessWidget {
           listener: (context, state) {
             if (state.image != null) {
               context.read<AppBloc>().add(
-                    AppNewEditedImageLoaded(
-                      isSucces: true,
-                    ),
-                  );
+                AppNewEditedImageLoaded(isSucces: true),
+              );
             }
           },
         ),
@@ -131,28 +119,19 @@ class _EditView extends StatelessWidget {
                 selector: (state) => state.image,
                 builder: (context, image) {
                   if (image == null) {
-                    return const Center(
-                      child: CircularProgressIndicator(),
-                    );
+                    return const Center(child: CircularProgressIndicator());
                   }
 
-                  return Image.memory(
-                    image,
-                    fit: BoxFit.contain,
-                  );
+                  return Image.memory(image, fit: BoxFit.contain);
                 },
               ),
             ),
 
             // * Default App Bar
-            AppBarEditPhoto(
-              editPhotoDocumentStyle: editPhotoDocumentStyle,
-            ),
+            AppBarEditPhoto(editPhotoDocumentStyle: editPhotoDocumentStyle),
 
             // * Default Bottom Bar
-            BottomBarEditPhoto(
-              editPhotoDocumentStyle: editPhotoDocumentStyle,
-            ),
+            BottomBarEditPhoto(editPhotoDocumentStyle: editPhotoDocumentStyle),
 
             // * children
             if (editPhotoDocumentStyle.children != null)

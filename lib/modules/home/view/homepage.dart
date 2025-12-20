@@ -14,8 +14,10 @@ import 'folder_page.dart';
 
 class Homepage extends StatefulWidget {
   static const String route = '/homepage';
+
+  const Homepage({super.key});
   @override
-  _HomepageState createState() => _HomepageState();
+  State<Homepage> createState() => _HomepageState();
 }
 
 class _HomepageState extends State<Homepage> {
@@ -120,7 +122,7 @@ class _HomepageState extends State<Homepage> {
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
-                      color: CustomColors.primary.withOpacity(0.1),
+                      color: CustomColors.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
@@ -399,7 +401,7 @@ class _ServiceCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: CustomColors.primary.withOpacity(0.1),
+                color: CustomColors.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(icon, color: CustomColors.primary, size: 22),
@@ -450,7 +452,7 @@ class _FolderCard extends StatelessWidget {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: CustomColors.primary.withOpacity(0.1),
+                  color: CustomColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
@@ -461,7 +463,7 @@ class _FolderCard extends StatelessWidget {
               ),
               const Spacer(),
               Text(
-                folder.folder_name,
+                folder.folderName,
                 style: Theme.of(context).textTheme.titleMedium,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
@@ -500,13 +502,13 @@ class _EmptyState extends StatelessWidget {
                 width: 120,
                 height: 120,
                 decoration: BoxDecoration(
-                  color: CustomColors.primary.withOpacity(0.1),
+                  color: CustomColors.primary.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
                   Icons.folder_outlined,
                   size: 64,
-                  color: CustomColors.primary.withOpacity(0.5),
+                  color: CustomColors.primary.withValues(alpha: 0.5),
                 ),
               ),
               const SizedBox(height: 24),

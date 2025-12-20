@@ -11,24 +11,23 @@ class MaskCrop extends StatelessWidget {
   final CropPhotoDocumentStyle cropPhotoDocumentStyle;
 
   const MaskCrop({
-    Key? key,
+    super.key,
     required this.area,
     required this.cropPhotoDocumentStyle,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
     return ClipPath(
       clipper: CropAreaClipper(area),
       child: BackdropFilter(
-        filter: cropPhotoDocumentStyle.maskFilter ??
-            ui.ImageFilter.blur(
-              sigmaX: 5,
-              sigmaY: 5,
-            ),
+        filter:
+            cropPhotoDocumentStyle.maskFilter ??
+            ui.ImageFilter.blur(sigmaX: 5, sigmaY: 5),
         child: Container(
-          color: cropPhotoDocumentStyle.maskColor ??
-              const Color(0xffb9c2d5).withOpacity(0.1),
+          color:
+              cropPhotoDocumentStyle.maskColor ??
+              const Color(0xffb9c2d5).withValues(alpha: 0.1),
         ),
       ),
     );

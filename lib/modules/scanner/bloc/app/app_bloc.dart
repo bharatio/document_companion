@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer' as developer;
 import 'dart:io';
 
 import 'package:bloc/bloc.dart';
@@ -12,10 +13,9 @@ import 'app_state.dart';
 class AppBloc extends Bloc<AppEvent, AppState> {
   final ImageUtils _imageUtils;
 
-  AppBloc({
-    required ImageUtils imageUtils,
-  })  : _imageUtils = imageUtils,
-        super(AppState.init()) {
+  AppBloc({required ImageUtils imageUtils})
+    : _imageUtils = imageUtils,
+      super(AppState.init()) {
     on<AppCameraInitialized>(_cameraInitialized);
     on<AppPhotoTaken>(_photoTaken);
     on<AppPageChanged>(_pageChanged);
@@ -35,9 +35,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     AppCameraInitialized event,
     Emitter<AppState> emit,
   ) async {
-    emit(state.copyWith(
-      statusCamera: AppStatus.loading,
-    ));
+    emit(state.copyWith(statusCamera: AppStatus.loading));
 
     List<CameraDescription> cameras = await availableCameras();
     CameraDescription camera = cameras.firstWhere(
@@ -53,23 +51,20 @@ class AppBloc extends Bloc<AppEvent, AppState> {
 
     await _cameraController!.initialize();
 
-    emit(state.copyWith(
-      statusCamera: AppStatus.success,
-      cameraController: _cameraController,
-    ));
+    emit(
+      state.copyWith(
+        statusCamera: AppStatus.success,
+        cameraController: _cameraController,
+      ),
+    );
   }
 
   ///
-  Future<void> _photoTaken(
-    AppPhotoTaken event,
-    Emitter<AppState> emit,
-  ) async {
-    emit(state.copyWith(
-      statusTakePhotoPage: AppStatus.loading,
-    ));
+  Future<void> _photoTaken(AppPhotoTaken event, Emitter<AppState> emit) async {
+    emit(state.copyWith(statusTakePhotoPage: AppStatus.loading));
 
     if (_cameraController == null) {
-      // TODO: agregar validacion
+      developer.log('Camera controller is null');
       return;
     }
 
@@ -83,15 +78,15 @@ class AppBloc extends Bloc<AppEvent, AppState> {
 
     final fileImage = File(_pictureTaken!.path);
 
-    emit(state.copyWith(
-      statusTakePhotoPage: AppStatus.success,
-      pictureInitial: fileImage,
-      contourInitial: response,
-    ));
+    emit(
+      state.copyWith(
+        statusTakePhotoPage: AppStatus.success,
+        pictureInitial: fileImage,
+        contourInitial: response,
+      ),
+    );
 
-    emit(state.copyWith(
-      currentPage: AppPages.cropPhoto,
-    ));
+    emit(state.copyWith(currentPage: AppPages.cropPhoto));
   }
 
   ///
@@ -101,27 +96,33 @@ class AppBloc extends Bloc<AppEvent, AppState> {
   ) async {
     switch (event.newPage) {
       case AppPages.takePhoto:
-        emit(state.copyWith(
-          currentPage: event.newPage,
-          statusTakePhotoPage: AppStatus.initial,
-          statusCropPhoto: AppStatus.initial,
-          contourInitial: null,
-        ));
+        emit(
+          state.copyWith(
+            currentPage: event.newPage,
+            statusTakePhotoPage: AppStatus.initial,
+            statusCropPhoto: AppStatus.initial,
+            contourInitial: null,
+          ),
+        );
         break;
 
       case AppPages.cropPhoto:
-        emit(state.copyWith(
-          currentPage: event.newPage,
-          currentFilterType: FilterType.natural,
-        ));
+        emit(
+          state.copyWith(
+            currentPage: event.newPage,
+            currentFilterType: FilterType.natural,
+          ),
+        );
         break;
 
       case AppPages.editDocument:
-        emit(state.copyWith(
-          currentPage: event.newPage,
-          statusEditPhoto: AppStatus.initial,
-          statusSavePhotoDocument: AppStatus.initial,
-        ));
+        emit(
+          state.copyWith(
+            currentPage: event.newPage,
+            statusEditPhoto: AppStatus.initial,
+            statusSavePhotoDocument: AppStatus.initial,
+          ),
+        );
         break;
     }
   }
@@ -134,9 +135,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     // Set status to loading - the actual cropping is handled by CropBloc
     // The CropBloc listener in crop_photo_document_page.dart will trigger
     // the crop operation and then call AppLoadCroppedPhoto when done
-    emit(state.copyWith(
-      statusCropPhoto: AppStatus.loading,
-    ));
+    emit(state.copyWith(statusCropPhoto: AppStatus.loading));
   }
 
   ///
@@ -144,15 +143,15 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     AppLoadCroppedPhoto event,
     Emitter<AppState> emit,
   ) async {
-    emit(state.copyWith(
-      statusCropPhoto: AppStatus.success,
-      pictureCropped: event.image,
-      contourInitial: event.area,
-    ));
+    emit(
+      state.copyWith(
+        statusCropPhoto: AppStatus.success,
+        pictureCropped: event.image,
+        contourInitial: event.area,
+      ),
+    );
 
-    emit(state.copyWith(
-      currentPage: AppPages.editDocument,
-    ));
+    emit(state.copyWith(currentPage: AppPages.editDocument));
   }
 
   ///
@@ -160,10 +159,12 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     AppFilterApplied event,
     Emitter<AppState> emit,
   ) async {
-    emit(state.copyWith(
-      currentFilterType: event.filter,
-      statusEditPhoto: AppStatus.loading,
-    ));
+    emit(
+      state.copyWith(
+        currentFilterType: event.filter,
+        statusEditPhoto: AppStatus.loading,
+      ),
+    );
   }
 
   ///
@@ -171,9 +172,11 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     AppNewEditedImageLoaded event,
     Emitter<AppState> emit,
   ) async {
-    emit(state.copyWith(
-      statusEditPhoto: event.isSucces ? AppStatus.success : AppStatus.failure,
-    ));
+    emit(
+      state.copyWith(
+        statusEditPhoto: event.isSucces ? AppStatus.success : AppStatus.failure,
+      ),
+    );
   }
 
   ///
@@ -181,9 +184,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     AppStartedSavingDocument event,
     Emitter<AppState> emit,
   ) async {
-    emit(state.copyWith(
-      statusSavePhotoDocument: AppStatus.loading,
-    ));
+    emit(state.copyWith(statusSavePhotoDocument: AppStatus.loading));
   }
 
   ///
@@ -191,13 +192,14 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     AppDocumentSaved event,
     Emitter<AppState> emit,
   ) async {
-    emit(state.copyWith(
-      statusSavePhotoDocument:
-          event.isSucces ? AppStatus.success : AppStatus.failure,
-    ));
+    emit(
+      state.copyWith(
+        statusSavePhotoDocument: event.isSucces
+            ? AppStatus.success
+            : AppStatus.failure,
+      ),
+    );
     // Take back to camera page to take next image
-    emit(state.copyWith(
-      currentPage: AppPages.takePhoto,
-    ));
+    emit(state.copyWith(currentPage: AppPages.takePhoto));
   }
 }

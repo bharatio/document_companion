@@ -10,34 +10,31 @@ class FolderTableHandler {
    */
 
   Future<void> insertFolder(FolderModel tableData) async {
-    final _database = await localDatabaseHandler.db;
-    _database?.insert(
-      _tableName,
-      tableData.toMap(),
-    );
+    final database = await localDatabaseHandler.db;
+    database?.insert(_tableName, tableData.toMap());
   }
 
   Future<List<FolderModel>> getFolders() async {
-    final _database = await localDatabaseHandler.db;
-    final maps = await _database?.query(_tableName);
+    final database = await localDatabaseHandler.db;
+    final maps = await database?.query(_tableName);
     return List.generate(maps?.length ?? 0, (i) {
       final map = maps?.elementAt(i);
       final id = map!['id'].toString();
-      final created_on = map['created_on'].toString();
-      final folder_name = map['folder_name'].toString();
-      final modified_on = map['modified_on'].toString();
+      final createdOn = map['created_on'].toString();
+      final folderName = map['folder_name'].toString();
+      final modifiedOn = map['modified_on'].toString();
       return FolderModel(
         id: id,
-        created_on: created_on,
-        folder_name: folder_name,
-        modified_on: modified_on,
+        createdOn: createdOn,
+        folderName: folderName,
+        modifiedOn: modifiedOn,
       );
     });
   }
 
   Future<void> updateFolder(FolderModel folder) async {
-    final _database = await localDatabaseHandler.db;
-    await _database?.update(
+    final database = await localDatabaseHandler.db;
+    await database?.update(
       _tableName,
       folder.toMap(),
       where: 'id = ?',
@@ -46,12 +43,8 @@ class FolderTableHandler {
   }
 
   Future<void> deleteFolder(String folderId) async {
-    final _database = await localDatabaseHandler.db;
-    await _database?.delete(
-      _tableName,
-      where: 'id = ?',
-      whereArgs: [folderId],
-    );
+    final database = await localDatabaseHandler.db;
+    await database?.delete(_tableName, where: 'id = ?', whereArgs: [folderId]);
   }
 }
 

@@ -13,7 +13,7 @@ class LocalDatabaseHandler {
     return _db;
   }
 
-  initDb() async {
+  Future<Database?> initDb() async {
     io.Directory documentsDirectory = await getApplicationDocumentsDirectory();
     String path = join(documentsDirectory.path, "test.db");
     var theDb = await openDatabase(
@@ -29,20 +29,24 @@ class LocalDatabaseHandler {
     // When creating the db, create the table
     // Create [CurrentImage] table
     await db.execute(
-        "CREATE TABLE CurrentImages(id TEXT PRIMARY KEY, image BLOB, timestamp TEXT, is_shoot_through_fast_camera TEXT, low_res_image BLOB )");
+      "CREATE TABLE CurrentImages(id TEXT PRIMARY KEY, image BLOB, timestamp TEXT, is_shoot_through_fast_camera TEXT, low_res_image BLOB )",
+    );
     // Create [Folders] table
     await db.execute(
-        "CREATE TABLE Folders(id TEXT PRIMARY KEY, folder_name TEXT, created_on TEXT, modified_on TEXT )");
+      "CREATE TABLE Folders(id TEXT PRIMARY KEY, folder_name TEXT, created_on TEXT, modified_on TEXT )",
+    );
     // Create [Images] table for folder-linked images
     await db.execute(
-        "CREATE TABLE Images(id TEXT PRIMARY KEY, folder_id TEXT, image BLOB, name TEXT, created_on TEXT, modified_on TEXT, size INTEGER, width INTEGER, height INTEGER, FOREIGN KEY (folder_id) REFERENCES Folders(id) ON DELETE CASCADE)");
+      "CREATE TABLE Images(id TEXT PRIMARY KEY, folder_id TEXT, image BLOB, name TEXT, created_on TEXT, modified_on TEXT, size INTEGER, width INTEGER, height INTEGER, FOREIGN KEY (folder_id) REFERENCES Folders(id) ON DELETE CASCADE)",
+    );
   }
 
   void _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
       // Add Images table for existing databases
       await db.execute(
-          "CREATE TABLE IF NOT EXISTS Images(id TEXT PRIMARY KEY, folder_id TEXT, image BLOB, name TEXT, created_on TEXT, modified_on TEXT, size INTEGER, width INTEGER, height INTEGER, FOREIGN KEY (folder_id) REFERENCES Folders(id) ON DELETE CASCADE)");
+        "CREATE TABLE IF NOT EXISTS Images(id TEXT PRIMARY KEY, folder_id TEXT, image BLOB, name TEXT, created_on TEXT, modified_on TEXT, size INTEGER, width INTEGER, height INTEGER, FOREIGN KEY (folder_id) REFERENCES Folders(id) ON DELETE CASCADE)",
+      );
     }
   }
 }

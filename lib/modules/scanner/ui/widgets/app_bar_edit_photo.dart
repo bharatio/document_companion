@@ -9,14 +9,12 @@ import '../../utils/edit_photo_document_style.dart';
 class AppBarEditPhoto extends StatelessWidget {
   final EditPhotoDocumentStyle editPhotoDocumentStyle;
 
-  const AppBarEditPhoto({
-    Key? key,
-    required this.editPhotoDocumentStyle,
-  }) : super(key: key);
+  const AppBarEditPhoto({super.key, required this.editPhotoDocumentStyle});
 
   @override
   Widget build(BuildContext context) {
-    if (editPhotoDocumentStyle.hideAppBarDefault) return const SizedBox.shrink();
+    if (editPhotoDocumentStyle.hideAppBarDefault)
+      return const SizedBox.shrink();
 
     return Positioned(
       top: 0,
@@ -32,14 +30,13 @@ class AppBarEditPhoto extends StatelessWidget {
               // Back button
               Container(
                 decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.5),
+                  color: Colors.black.withValues(alpha: 0.5),
                   shape: BoxShape.circle,
                 ),
                 child: IconButton(
-                  onPressed: () =>
-                      context.read<DocumentScannerController>().changePage(
-                            AppPages.cropPhoto,
-                          ),
+                  onPressed: () => context
+                      .read<DocumentScannerController>()
+                      .changePage(AppPages.cropPhoto),
                   icon: const Icon(
                     Icons.arrow_back_rounded,
                     color: Colors.white,

@@ -1,3 +1,4 @@
+import 'dart:developer' as developer;
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -18,7 +19,7 @@ class FileImportService {
         final Uint8List imageBytes = await image.readAsBytes();
         await currentImageBloc.saveCurrentImage(imageBytes);
         await currentImageBloc.getCurrentImage();
-        
+
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -43,9 +44,7 @@ class FileImportService {
   /// Import multiple images from gallery
   Future<void> importMultipleImagesFromGallery(BuildContext context) async {
     try {
-      final List<XFile> images = await _picker.pickMultiImage(
-        imageQuality: 90,
-      );
+      final List<XFile> images = await _picker.pickMultiImage(imageQuality: 90);
 
       if (images.isEmpty) return;
 
@@ -56,7 +55,7 @@ class FileImportService {
           await currentImageBloc.saveCurrentImage(imageBytes);
           successCount++;
         } catch (e) {
-          print('Error importing image ${image.name}: $e');
+          developer.log('Error importing image ${image.name}', error: e);
         }
       }
 
@@ -92,9 +91,7 @@ class FileImportService {
       builder: (context) => Container(
         decoration: BoxDecoration(
           color: Theme.of(context).scaffoldBackgroundColor,
-          borderRadius: const BorderRadius.vertical(
-            top: Radius.circular(24),
-          ),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: SafeArea(
           child: Column(
@@ -138,4 +135,3 @@ class FileImportService {
 }
 
 final fileImportService = FileImportService();
-

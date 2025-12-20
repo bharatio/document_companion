@@ -3,7 +3,7 @@ import 'package:document_companion/modules/home/bloc/folder_bloc.dart';
 import 'package:flutter/material.dart';
 
 class CreateFolderBottomModalSheet extends StatefulWidget {
-  const CreateFolderBottomModalSheet({Key? key}) : super(key: key);
+  const CreateFolderBottomModalSheet({super.key});
 
   @override
   State<CreateFolderBottomModalSheet> createState() =>
@@ -42,9 +42,7 @@ class _CreateFolderBottomModalSheetState
     return Container(
       decoration: BoxDecoration(
         color: CustomColors.surface,
-        borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(24),
-        ),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,

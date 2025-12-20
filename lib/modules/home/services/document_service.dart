@@ -46,19 +46,23 @@ class DocumentService {
                   image: image.image,
                   name: nameController.text.trim(),
                   createdOn: image.createdOn,
-                  modifiedOn: DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now()),
+                  modifiedOn: DateFormat(
+                    'yyyy-MM-dd HH:mm:ss',
+                  ).format(DateTime.now()),
                   size: image.size,
                   width: image.width,
                   height: image.height,
                 );
-                
+
                 await imageDatabaseHandler.updateImage(updatedImage);
                 await imageBloc.fetchImagesByFolderId(folderId);
-                
+
                 if (context.mounted) {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Document renamed successfully')),
+                    const SnackBar(
+                      content: Text('Document renamed successfully'),
+                    ),
                   );
                 }
               }
@@ -79,10 +83,7 @@ class DocumentService {
       await file.writeAsBytes(image.image);
 
       // Share the file
-      await Share.shareXFiles(
-        [XFile(file.path)],
-        subject: image.name,
-      );
+      await Share.shareXFiles([XFile(file.path)], subject: image.name);
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -103,9 +104,9 @@ class DocumentService {
   ) async {
     // Fetch all folders
     await folderBloc.fetchFolders();
-    
+
     if (!context.mounted) return;
-    
+
     await showDialog(
       context: context,
       builder: (dialogContext) => StreamBuilder<List<FolderViewModel>>(
@@ -116,15 +117,19 @@ class DocumentService {
               content: Center(child: CircularProgressIndicator()),
             );
           }
-          
+
           final folders = snapshot.data!;
           // Filter out current folder
-          final availableFolders = folders.where((f) => f.id != currentFolderId).toList();
-          
+          final availableFolders = folders
+              .where((f) => f.id != currentFolderId)
+              .toList();
+
           if (availableFolders.isEmpty) {
             return AlertDialog(
               title: const Text('Move Document'),
-              content: const Text('No other folders available. Create a folder first.'),
+              content: const Text(
+                'No other folders available. Create a folder first.',
+              ),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(dialogContext),
@@ -133,7 +138,7 @@ class DocumentService {
               ],
             );
           }
-          
+
           return AlertDialog(
             title: const Text('Move Document'),
             content: SizedBox(
@@ -154,7 +159,7 @@ class DocumentService {
                         final folder = availableFolders[index];
                         return ListTile(
                           leading: const Icon(Icons.folder_rounded),
-                          title: Text(folder.folder_name),
+                          title: Text(folder.folderName),
                           onTap: () async {
                             Navigator.pop(dialogContext);
                             await _moveDocumentToFolder(
@@ -203,20 +208,18 @@ class DocumentService {
         width: image.width,
         height: image.height,
       );
-      
+
       await imageDatabaseHandler.updateImage(updatedImage);
-      
+
       // Refresh both source and destination folders
       await imageBloc.fetchImagesByFolderId(sourceFolderId);
       await imageBloc.fetchImagesByFolderId(destinationFolderId);
-      
+
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('"${image.name}" moved successfully'),
-          ),
+          SnackBar(content: Text('"${image.name}" moved successfully')),
         );
-        
+
         // If we're in the document viewer, go back to folder page
         if (Navigator.canPop(context)) {
           Navigator.pop(context);
@@ -254,7 +257,7 @@ class DocumentService {
             onPressed: () async {
               await imageDatabaseHandler.deleteImage(image.id);
               await imageBloc.fetchImagesByFolderId(folderId);
-              
+
               if (context.mounted) {
                 Navigator.pop(context); // Close dialog
                 // Close viewer if open (check if we can pop)
@@ -278,4 +281,3 @@ class DocumentService {
 }
 
 final documentService = DocumentService();
-

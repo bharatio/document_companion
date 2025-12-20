@@ -20,9 +20,9 @@ class FolderBloc {
   Future<void> createFolder(String folderName) async {
     final tableData = FolderModel(
       id: uuid.v4(),
-      folder_name: folderName,
-      created_on: DateTime.now().millisecondsSinceEpoch.toString(),
-      modified_on: DateTime.now().millisecondsSinceEpoch.toString(),
+      folderName: folderName,
+      createdOn: DateTime.now().millisecondsSinceEpoch.toString(),
+      modifiedOn: DateTime.now().millisecondsSinceEpoch.toString(),
     );
     await folderTableHandler.insertFolder(tableData);
     await fetchFolders();
@@ -31,16 +31,16 @@ class FolderBloc {
   Future<void> fetchFolders() async {
     List<FolderModel> foldersData = await folderTableHandler.getFolders();
     _allFolders = [];
-    foldersData.forEach(
-      (folder) => _allFolders.add(
+    for (var folder in foldersData) {
+      _allFolders.add(
         FolderViewModel(
           id: folder.id,
-          created_on: folder.created_on,
-          folder_name: folder.folder_name,
-          modified_on: folder.modified_on,
+          createdOn: folder.createdOn,
+          folderName: folder.folderName,
+          modifiedOn: folder.modifiedOn,
         ),
-      ),
-    );
+      );
+    }
     _applyFilters();
   }
 
@@ -61,7 +61,7 @@ class FolderBloc {
     // Apply search filter
     if (_searchQuery.isNotEmpty) {
       filtered = filtered.where((folder) {
-        return folder.folder_name.toLowerCase().contains(_searchQuery);
+        return folder.folderName.toLowerCase().contains(_searchQuery);
       }).toList();
     }
 
@@ -70,16 +70,16 @@ class FolderBloc {
       int comparison = 0;
       switch (_sortBy) {
         case 'name':
-          comparison = a.folder_name.compareTo(b.folder_name);
+          comparison = a.folderName.compareTo(b.folderName);
           break;
         case 'created':
-          comparison = a.created_on.compareTo(b.created_on);
+          comparison = a.createdOn.compareTo(b.createdOn);
           break;
         case 'modified':
-          comparison = a.modified_on.compareTo(b.modified_on);
+          comparison = a.modifiedOn.compareTo(b.modifiedOn);
           break;
         default:
-          comparison = a.folder_name.compareTo(b.folder_name);
+          comparison = a.folderName.compareTo(b.folderName);
       }
       return _sortAscending ? comparison : -comparison;
     });
@@ -96,9 +96,9 @@ class FolderBloc {
     final folder = _allFolders.firstWhere((f) => f.id == folderId);
     final updatedFolder = FolderModel(
       id: folder.id,
-      folder_name: newName,
-      created_on: folder.created_on,
-      modified_on: DateTime.now().millisecondsSinceEpoch.toString(),
+      folderName: newName,
+      createdOn: folder.createdOn,
+      modifiedOn: DateTime.now().millisecondsSinceEpoch.toString(),
     );
     await folderTableHandler.updateFolder(updatedFolder);
     await fetchFolders();

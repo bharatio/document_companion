@@ -12,7 +12,7 @@ import '../../scanner/utils/general_styles.dart';
 
 class Scan extends StatefulWidget {
   static const String route = '/scan';
-  const Scan({Key? key}) : super(key: key);
+  const Scan({super.key});
 
   @override
   State<Scan> createState() => _ScanState();
@@ -39,7 +39,7 @@ class _ScanState extends State<Scan> {
           await currentImageBloc.saveCurrentImage(imageBytes);
           await currentImageBloc.getCurrentImage();
           // Navigate to images preview after saving
-          if (mounted) {
+          if (context.mounted) {
             Navigator.pushNamed(context, ImagesPreview.route);
           }
         },

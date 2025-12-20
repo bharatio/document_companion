@@ -10,10 +10,7 @@ import '../../document_scanner_controller.dart';
 class ButtonTakePhoto extends StatelessWidget {
   final bool hide;
 
-  const ButtonTakePhoto({
-    Key? key,
-    this.hide = false,
-  }) : super(key: key);
+  const ButtonTakePhoto({super.key, this.hide = false});
 
   @override
   Widget build(BuildContext context) {
@@ -25,12 +22,10 @@ class ButtonTakePhoto extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
       decoration: BoxDecoration(
         color: CustomColors.surface,
-        borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(24),
-        ),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 20,
             offset: const Offset(0, -5),
           ),
@@ -46,7 +41,7 @@ class ButtonTakePhoto extends StatelessWidget {
               stream: currentImageBloc.currentImageStream,
               builder: (context, AsyncSnapshot<List<CurrentImage>> snapshot) {
                 final hasImages = snapshot.hasData && snapshot.data!.isNotEmpty;
-                
+
                 return Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -67,7 +62,7 @@ class ButtonTakePhoto extends StatelessWidget {
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
+                                color: Colors.black.withValues(alpha: 0.1),
                                 blurRadius: 8,
                               ),
                             ],
@@ -109,10 +104,11 @@ class ButtonTakePhoto extends StatelessWidget {
                       )
                     else
                       const SizedBox(width: 56),
-                    
+
                     // Capture button
                     GestureDetector(
-                      onTap: () => context.read<DocumentScannerController>().takePhoto(),
+                      onTap: () =>
+                          context.read<DocumentScannerController>().takePhoto(),
                       child: Container(
                         width: 72,
                         height: 72,
@@ -121,7 +117,9 @@ class ButtonTakePhoto extends StatelessWidget {
                           color: CustomColors.primary,
                           boxShadow: [
                             BoxShadow(
-                              color: CustomColors.primary.withOpacity(0.4),
+                              color: CustomColors.primary.withValues(
+                                alpha: 0.4,
+                              ),
                               blurRadius: 20,
                               spreadRadius: 4,
                             ),
@@ -134,7 +132,7 @@ class ButtonTakePhoto extends StatelessWidget {
                         ),
                       ),
                     ),
-                    
+
                     // Done/Preview button
                     if (hasImages)
                       TextButton.icon(
@@ -163,4 +161,3 @@ class ButtonTakePhoto extends StatelessWidget {
     );
   }
 }
-

@@ -1,20 +1,20 @@
 class FolderModel {
   FolderModel({
     required this.id,
-    required this.folder_name,
-    required this.created_on,
-    required this.modified_on,
+    required this.folderName,
+    required this.createdOn,
+    required this.modifiedOn,
   });
   String id;
-  String folder_name;
-  String created_on;
-  String modified_on;
+  String folderName;
+  String createdOn;
+  String modifiedOn;
   Map<String, dynamic> toMap() {
     return {
       'id': id,
-      'folder_name': folder_name,
-      'created_on': created_on,
-      'modified_on': modified_on,
+      'folder_name': folderName,
+      'created_on': createdOn,
+      'modified_on': modifiedOn,
     };
   }
 }

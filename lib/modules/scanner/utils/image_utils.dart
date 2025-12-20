@@ -1,7 +1,6 @@
 import 'dart:math';
-import 'dart:typed_data';
-import 'dart:ui';
 
+import 'dart:developer' as developer;
 import 'package:flutter/services.dart';
 import 'package:image/image.dart' as img;
 
@@ -16,12 +15,7 @@ class ImageUtils {
 
   /// Calculates the rect of the image
   Rect imageRect(Size screenSize) {
-    return Rect.fromLTWH(
-      0,
-      0,
-      screenSize.width,
-      screenSize.height,
-    );
+    return Rect.fromLTWH(0, 0, screenSize.width, screenSize.height);
   }
 
   /// Apply filters to the image with opencv
@@ -115,7 +109,8 @@ class ImageUtils {
         bottomLeft = bottom2;
       }
 
-      final anyEqualPoints = topRight == topLeft ||
+      final anyEqualPoints =
+          topRight == topLeft ||
           topRight == bottomLeft ||
           topRight == bottomRight ||
           topLeft == bottomLeft ||
@@ -132,8 +127,7 @@ class ImageUtils {
         bottomRight: bottomRight,
       );
     } catch (e) {
-      // TODO: add error handler
-      // print(e);
+      developer.log('Error in findContourPhoto: $e');
       return null;
     }
   }
@@ -147,41 +141,37 @@ class ImageUtils {
   ) async {
     try {
       // Try native perspective adjustment first
-      final newImage =
-          await _methodChannel.invokeMethod("adjustingPerspective", {
-        "byteData": byteData,
-        "points": contour.points
-            .map((e) => {
-                  "x": e.x,
-                  "y": e.y,
-                })
-            .toList(),
-      });
+      final newImage = await _methodChannel.invokeMethod(
+        "adjustingPerspective",
+        {
+          "byteData": byteData,
+          "points": contour.points.map((e) => {"x": e.x, "y": e.y}).toList(),
+        },
+      );
 
       if (newImage != null && newImage.isNotEmpty) {
         return newImage;
       }
 
       // Fallback to rectangular crop if native method fails
-      print('Native perspective adjustment failed, using fallback rectangular crop');
+      developer.log(
+        'Native perspective adjustment failed, using fallback rectangular crop',
+      );
       return _fallbackRectangularCrop(byteData, contour);
     } catch (e) {
-      print('Error in adjustingPerspective: $e');
+      developer.log('Error in adjustingPerspective', error: e);
       // Fallback to rectangular crop on error
       try {
         return _fallbackRectangularCrop(byteData, contour);
       } catch (fallbackError) {
-        print('Fallback crop also failed: $fallbackError');
+        developer.log('Fallback crop also failed', error: fallbackError);
         return null;
       }
     }
   }
 
   /// Fallback rectangular crop when perspective adjustment is not available
-  Uint8List? _fallbackRectangularCrop(
-    Uint8List byteData,
-    Contour contour,
-  ) {
+  Uint8List? _fallbackRectangularCrop(Uint8List byteData, Contour contour) {
     try {
       // Decode the image
       final image = img.decodeImage(byteData);
@@ -224,16 +214,13 @@ class ImageUtils {
       // Encode back to bytes (JPEG format)
       return Uint8List.fromList(img.encodeJpg(croppedImage, quality: 95));
     } catch (e) {
-      print('Error in fallback crop: $e');
+      developer.log('Error in fallback crop', error: e);
       return null;
     }
   }
 
   /// Apply the selected [filter] with the opencv library
-  Future<Uint8List> applyFilter(
-    Uint8List byteData,
-    FilterType filter,
-  ) async {
+  Future<Uint8List> applyFilter(Uint8List byteData, FilterType filter) async {
     try {
       final newImage = await _methodChannel.invokeMethod("applyFilter", {
         "byteData": byteData,
@@ -246,8 +233,7 @@ class ImageUtils {
 
       return newImage;
     } catch (e) {
-      // TODO: add error handler
-      // print(e);
+      developer.log('Error in applyFilter', error: e);
       return byteData;
     }
   }

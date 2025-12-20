@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer' as developer;
 import 'dart:math';
 
 import 'package:bloc/bloc.dart';
@@ -15,12 +16,10 @@ class CropBloc extends Bloc<CropEvent, CropState> {
   final DotUtils _dotUtils;
   final ImageUtils _imageUtils;
 
-  CropBloc({
-    required DotUtils dotUtils,
-    required ImageUtils imageUtils,
-  })  : _dotUtils = dotUtils,
-        _imageUtils = imageUtils,
-        super(CropState.init()) {
+  CropBloc({required DotUtils dotUtils, required ImageUtils imageUtils})
+    : _dotUtils = dotUtils,
+      _imageUtils = imageUtils,
+      super(CropState.init()) {
     on<CropAreaInitialized>(_areaInitialized);
     on<CropDotMoved>(_dotMoved);
     on<CropPhotoByAreaCropped>(_photoByAreaCropped);
@@ -41,9 +40,7 @@ class CropBloc extends Bloc<CropEvent, CropState> {
           event.positionImage.bottom,
     );
 
-    _imageRect = _imageUtils.imageRect(
-      newScreenSize,
-    );
+    _imageRect = _imageUtils.imageRect(newScreenSize);
 
     Area area = event.defaultAreaInitial;
 
@@ -75,16 +72,11 @@ class CropBloc extends Bloc<CropEvent, CropState> {
       );
     }
 
-    emit(state.copyWith(
-      area: area,
-    ));
+    emit(state.copyWith(area: area));
   }
 
   ///
-  Future<void> _dotMoved(
-    CropDotMoved event,
-    Emitter<CropState> emit,
-  ) async {
+  Future<void> _dotMoved(CropDotMoved event, Emitter<CropState> emit) async {
     Area newArea;
 
     switch (event.dotPosition) {
@@ -97,9 +89,7 @@ class CropBloc extends Bloc<CropEvent, CropState> {
           originalArea: state.area,
         );
 
-        newArea = state.area.copyWith(
-          topRight: result,
-        );
+        newArea = state.area.copyWith(topRight: result);
         break;
 
       case DotPosition.topLeft:
@@ -111,9 +101,7 @@ class CropBloc extends Bloc<CropEvent, CropState> {
           originalArea: state.area,
         );
 
-        newArea = state.area.copyWith(
-          topLeft: result,
-        );
+        newArea = state.area.copyWith(topLeft: result);
         break;
 
       case DotPosition.bottomRight:
@@ -125,9 +113,7 @@ class CropBloc extends Bloc<CropEvent, CropState> {
           originalArea: state.area,
         );
 
-        newArea = state.area.copyWith(
-          bottomRight: result,
-        );
+        newArea = state.area.copyWith(bottomRight: result);
         break;
 
       case DotPosition.bottomLeft:
@@ -139,9 +125,7 @@ class CropBloc extends Bloc<CropEvent, CropState> {
           originalArea: state.area,
         );
 
-        newArea = state.area.copyWith(
-          bottomLeft: result,
-        );
+        newArea = state.area.copyWith(bottomLeft: result);
         break;
 
       case DotPosition.all:
@@ -155,11 +139,7 @@ class CropBloc extends Bloc<CropEvent, CropState> {
         break;
     }
 
-    emit(
-      state.copyWith(
-        area: newArea,
-      ),
-    );
+    emit(state.copyWith(area: newArea));
   }
 
   ///
@@ -174,7 +154,7 @@ class CropBloc extends Bloc<CropEvent, CropState> {
       }
 
       final imageBytes = await event.image.readAsBytes();
-      
+
       if (imageBytes.isEmpty) {
         throw Exception('Image file is empty');
       }
@@ -222,17 +202,16 @@ class CropBloc extends Bloc<CropEvent, CropState> {
       );
 
       if (response == null || response.isEmpty) {
-        throw Exception('Failed to crop image. Both native and fallback methods failed.');
+        throw Exception(
+          'Failed to crop image. Both native and fallback methods failed.',
+        );
       }
 
-      emit(state.copyWith(
-        imageCropped: response,
-        areaParsed: area,
-      ));
+      emit(state.copyWith(imageCropped: response, areaParsed: area));
     } catch (e) {
       // If cropping fails, emit error but don't crash
       // The AppBloc listener should handle this
-      print('Error cropping image: $e');
+      developer.log('Error cropping image', error: e);
       // Re-emit current state to allow retry
       // Don't set imageCropped to null explicitly to avoid triggering listeners incorrectly
       emit(state);

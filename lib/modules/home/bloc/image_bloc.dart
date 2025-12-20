@@ -1,12 +1,13 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:document_companion/local_database/handler/image_database_handler.dart';
 import 'package:document_companion/local_database/models/image_model.dart';
 
 class ImageBloc {
   final StreamController<List<ImageModel>> _imageController =
       StreamController<List<ImageModel>>.broadcast();
-  
+
   Stream<List<ImageModel>> get imageStream => _imageController.stream;
 
   List<ImageModel> _allImages = [];
@@ -14,11 +15,14 @@ class ImageBloc {
 
   Future<void> fetchImagesByFolderId(String folderId) async {
     try {
+      // Clear search query when loading a new folder to prevent stale filters
+      _searchQuery = '';
       _allImages = await imageDatabaseHandler.getImagesByFolderId(folderId);
       _applySearch();
     } catch (e) {
-      print('Error fetching images: $e');
+      debugPrint('Error fetching images: $e');
       _allImages = [];
+      _searchQuery = '';
       _imageController.sink.add([]);
     }
   }
@@ -48,7 +52,7 @@ class ImageBloc {
     try {
       return await imageDatabaseHandler.getImageCountByFolderId(folderId);
     } catch (e) {
-      print('Error getting image count: $e');
+      debugPrint('Error getting image count: $e');
       return 0;
     }
   }
@@ -59,4 +63,3 @@ class ImageBloc {
 }
 
 final imageBloc = ImageBloc();
-

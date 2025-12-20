@@ -5,21 +5,21 @@ class CurrentImage {
     required this.id,
     required this.image,
     required this.timestamp,
-    required this.is_shoot_through_fast_camera,
-    required this.low_res_image,
+    required this.isShootThroughFastCamera,
+    required this.lowResImage,
   });
   String id;
   Uint8List image;
   String timestamp;
-  bool is_shoot_through_fast_camera;
-  Uint8List low_res_image;
-  toMap() {
+  bool isShootThroughFastCamera;
+  Uint8List lowResImage;
+  Map<String, dynamic> toMap() {
     return {
       'id': id,
       'image': image,
       'timestamp': timestamp,
-      'is_shoot_through_fast_camera': is_shoot_through_fast_camera.toString(),
-      'low_res_image': low_res_image,
+      'is_shoot_through_fast_camera': isShootThroughFastCamera.toString(),
+      'low_res_image': lowResImage,
     };
   }
 }

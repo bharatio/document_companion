@@ -1,3 +1,4 @@
+import 'dart:developer' as developer;
 import 'dart:io';
 import 'dart:typed_data';
 import 'dart:convert';
@@ -27,18 +28,13 @@ class PdfService {
 
     for (var currentImage in images) {
       final image = pw.MemoryImage(currentImage.image);
-      
+
       pdf.addPage(
         pw.Page(
           pageFormat: PdfPageFormat.a4,
           margin: const pw.EdgeInsets.all(0),
           build: (pw.Context context) {
-            return pw.Center(
-              child: pw.Image(
-                image,
-                fit: pw.BoxFit.contain,
-              ),
-            );
+            return pw.Center(child: pw.Image(image, fit: pw.BoxFit.contain));
           },
         ),
       );
@@ -53,18 +49,13 @@ class PdfService {
 
     for (var imageData in imageBytes) {
       final image = pw.MemoryImage(imageData);
-      
+
       pdf.addPage(
         pw.Page(
           pageFormat: PdfPageFormat.a4,
           margin: const pw.EdgeInsets.all(0),
           build: (pw.Context context) {
-            return pw.Center(
-              child: pw.Image(
-                image,
-                fit: pw.BoxFit.contain,
-              ),
-            );
+            return pw.Center(child: pw.Image(image, fit: pw.BoxFit.contain));
           },
         ),
       );
@@ -81,7 +72,7 @@ class PdfService {
       await file.writeAsBytes(pdfBytes);
       return file;
     } catch (e) {
-      print('Error saving PDF: $e');
+      developer.log('Error saving PDF', error: e);
       return null;
     }
   }
@@ -91,13 +82,10 @@ class PdfService {
     try {
       final file = await savePdfToDevice(pdfBytes, fileName);
       if (file != null) {
-        await Share.shareXFiles(
-          [XFile(file.path)],
-          subject: fileName,
-        );
+        await Share.shareXFiles([XFile(file.path)], subject: fileName);
       }
     } catch (e) {
-      print('Error sharing PDF: $e');
+      developer.log('Error sharing PDF', error: e);
     }
   }
 
@@ -108,7 +96,7 @@ class PdfService {
         onLayout: (PdfPageFormat format) async => pdfBytes,
       );
     } catch (e) {
-      print('Error printing PDF: $e');
+      developer.log('Error printing PDF', error: e);
     }
   }
 
@@ -160,41 +148,38 @@ class PdfService {
       for (var pdfFile in pdfFiles) {
         try {
           final pdfBytes = await pdfFile.readAsBytes();
-          
+
           // Render PDF pages as images using printing package
           // Printing.raster returns a Stream<PdfRaster>
           await for (var img in Printing.raster(pdfBytes, dpi: 150)) {
             try {
               final imgBytes = await img.toPng();
               final pdfImage = pw.MemoryImage(imgBytes);
-              
+
               mergedPdf.addPage(
                 pw.Page(
                   pageFormat: PdfPageFormat.a4,
                   build: (pw.Context context) {
                     return pw.Center(
-                      child: pw.Image(
-                        pdfImage,
-                        fit: pw.BoxFit.contain,
-                      ),
+                      child: pw.Image(pdfImage, fit: pw.BoxFit.contain),
                     );
                   },
                 ),
               );
             } catch (e) {
-              print('Error converting page to image: $e');
+              developer.log('Error converting page to image', error: e);
               // Continue with next page
             }
           }
         } catch (e) {
-          print('Error processing PDF ${pdfFile.path}: $e');
+          developer.log('Error processing PDF ${pdfFile.path}', error: e);
           // Continue with next PDF even if one fails
         }
       }
 
       return mergedPdf.save();
     } catch (e) {
-      print('Error merging PDFs: $e');
+      developer.log('Error merging PDFs', error: e);
       return null;
     }
   }
@@ -209,16 +194,18 @@ class PdfService {
       // Create temporary files from PDF bytes
       final directory = await getTemporaryDirectory();
       final tempFiles = <File>[];
-      
+
       for (var i = 0; i < pdfBytesList.length; i++) {
-        final tempFile = File('${directory.path}/temp_pdf_${DateTime.now().millisecondsSinceEpoch}_$i.pdf');
+        final tempFile = File(
+          '${directory.path}/temp_pdf_${DateTime.now().millisecondsSinceEpoch}_$i.pdf',
+        );
         await tempFile.writeAsBytes(pdfBytesList[i]);
         tempFiles.add(tempFile);
       }
 
       // Merge the temporary files
       final result = await mergePdfsFromFiles(tempFiles);
-      
+
       // Clean up temporary files
       for (var file in tempFiles) {
         try {
@@ -227,10 +214,10 @@ class PdfService {
           // Ignore cleanup errors
         }
       }
-      
+
       return result;
     } catch (e) {
-      print('Error merging PDFs from bytes: $e');
+      developer.log('Error merging PDFs from bytes', error: e);
       return null;
     }
   }
@@ -275,9 +262,7 @@ class PdfService {
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (context) => const Center(
-          child: CircularProgressIndicator(),
-        ),
+        builder: (context) => const Center(child: CircularProgressIndicator()),
       );
 
       // Convert PlatformFile to File objects
@@ -298,7 +283,7 @@ class PdfService {
       final mergedBytes = await mergePdfsFromFiles(pdfFiles);
 
       if (!context.mounted) return;
-      
+
       // Close loading dialog
       Navigator.pop(context);
 
@@ -350,10 +335,10 @@ class PdfService {
       await for (var img in Printing.raster(pdfBytes, dpi: 150)) {
         try {
           final imgBytes = await img.toPng();
-          
+
           // Create image name based on PDF filename and page number
           final imageName = '${pdfFileName}_Page_$pageNumber';
-          
+
           final imageModel = ImageModel(
             id: uuid.v4(),
             folderId: folderId,
@@ -365,11 +350,14 @@ class PdfService {
             width: img.width,
             height: img.height,
           );
-          
+
           await imageDatabaseHandler.insertImage(imageModel);
           pageNumber++;
         } catch (e) {
-          print('Error converting PDF page $pageNumber to image: $e');
+          developer.log(
+            'Error converting PDF page $pageNumber to image',
+            error: e,
+          );
           // Continue with next page
         }
       }
@@ -377,7 +365,7 @@ class PdfService {
       // Refresh folder images
       imageBloc.fetchImagesByFolderId(folderId);
     } catch (e) {
-      print('Error importing PDF: $e');
+      developer.log('Error importing PDF', error: e);
       rethrow;
     }
   }
@@ -406,7 +394,7 @@ class PdfService {
 
       final platformFile = result.files.first;
       File? pdfFile;
-      
+
       if (platformFile.path != null) {
         pdfFile = File(platformFile.path!);
       } else if (platformFile.bytes != null) {
@@ -435,11 +423,7 @@ class PdfService {
       if (!context.mounted) return;
 
       // Show folder selection dialog
-      await _showFolderSelectionDialog(
-        context,
-        pdfFile,
-        pdfFileName,
-      );
+      await _showFolderSelectionDialog(context, pdfFile, pdfFileName);
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -461,6 +445,8 @@ class PdfService {
   ) async {
     // Fetch folders first
     await folderBloc.fetchFolders();
+
+    if (!context.mounted) return;
 
     await showDialog(
       context: context,
@@ -501,23 +487,25 @@ class PdfService {
                       ),
                       const SizedBox(height: 16),
                       Flexible(
-                        child: ListView.builder(
-                          shrinkWrap: true,
-                          itemCount: folders.length,
-                          itemBuilder: (context, index) {
-                            final folder = folders[index];
-
-                            return RadioListTile<String>(
-                              title: Text(folder.folder_name),
-                              value: folder.id,
-                              groupValue: selectedFolderId,
-                              onChanged: (value) {
-                                setState(() {
-                                  selectedFolderId = value;
-                                });
-                              },
-                            );
+                        child: RadioGroup<String>(
+                          groupValue: selectedFolderId,
+                          onChanged: (value) {
+                            setState(() {
+                              selectedFolderId = value;
+                            });
                           },
+                          child: ListView.builder(
+                            shrinkWrap: true,
+                            itemCount: folders.length,
+                            itemBuilder: (context, index) {
+                              final folder = folders[index];
+
+                              return RadioListTile<String>(
+                                title: Text(folder.folderName),
+                                value: folder.id,
+                              );
+                            },
+                          ),
                         ),
                       ),
                     ],
@@ -620,16 +608,16 @@ class PdfService {
                 pageFormat: PdfPageFormat.a4,
                 build: (pw.Context context) {
                   return pw.Center(
-                    child: pw.Image(
-                      pdfImage,
-                      fit: pw.BoxFit.contain,
-                    ),
+                    child: pw.Image(pdfImage, fit: pw.BoxFit.contain),
                   );
                 },
               ),
             );
           } catch (e) {
-            print('Error converting page ${pageIndex + 1} to image: $e');
+            developer.log(
+              'Error converting page ${pageIndex + 1} to image',
+              error: e,
+            );
           }
         }
         pageIndex++;
@@ -705,9 +693,7 @@ class PdfService {
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (context) => const Center(
-          child: CircularProgressIndicator(),
-        ),
+        builder: (context) => const Center(child: CircularProgressIndicator()),
       );
 
       final pageCount = await getPdfPageCount(pdfBytes);
@@ -803,9 +789,8 @@ class PdfService {
                         showDialog(
                           context: context,
                           barrierDismissible: false,
-                          builder: (context) => const Center(
-                            child: CircularProgressIndicator(),
-                          ),
+                          builder: (context) =>
+                              const Center(child: CircularProgressIndicator()),
                         );
 
                         try {
@@ -872,7 +857,8 @@ class PdfService {
               // Share all split PDFs
               for (var i = 0; i < splitPdfs.length; i++) {
                 final range = pageRanges[i];
-                final fileName = '${pdfFileName}_pages_${range.start + 1}-${range.end + 1}';
+                final fileName =
+                    '${pdfFileName}_pages_${range.start + 1}-${range.end + 1}';
                 sharePdf(splitPdfs[i], fileName);
               }
             },
@@ -904,22 +890,19 @@ class PdfService {
               pageFormat: PdfPageFormat.a4,
               build: (pw.Context context) {
                 return pw.Center(
-                  child: pw.Image(
-                    pdfImage,
-                    fit: pw.BoxFit.contain,
-                  ),
+                  child: pw.Image(pdfImage, fit: pw.BoxFit.contain),
                 );
               },
             ),
           );
         } catch (e) {
-          print('Error compressing page: $e');
+          developer.log('Error compressing page', error: e);
         }
       }
 
       return await compressedPdf.save();
     } catch (e) {
-      print('Error compressing PDF: $e');
+      developer.log('Error compressing PDF', error: e);
       return null;
     }
   }
@@ -1037,38 +1020,38 @@ class PdfService {
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
                   const SizedBox(height: 16),
-                  RadioListTile<CompressionQuality>(
-                    title: const Text('Low (Smaller file)'),
-                    subtitle: Text('~${_formatFileSize((originalSize * 0.3).round())} estimated'),
-                    value: CompressionQuality.low,
+                  RadioGroup<CompressionQuality>(
                     groupValue: selectedQuality,
                     onChanged: (value) {
                       setState(() {
                         selectedQuality = value;
                       });
                     },
-                  ),
-                  RadioListTile<CompressionQuality>(
-                    title: const Text('Medium (Balanced)'),
-                    subtitle: Text('~${_formatFileSize((originalSize * 0.5).round())} estimated'),
-                    value: CompressionQuality.medium,
-                    groupValue: selectedQuality,
-                    onChanged: (value) {
-                      setState(() {
-                        selectedQuality = value;
-                      });
-                    },
-                  ),
-                  RadioListTile<CompressionQuality>(
-                    title: const Text('High (Better quality)'),
-                    subtitle: Text('~${_formatFileSize((originalSize * 0.7).round())} estimated'),
-                    value: CompressionQuality.high,
-                    groupValue: selectedQuality,
-                    onChanged: (value) {
-                      setState(() {
-                        selectedQuality = value;
-                      });
-                    },
+                    child: Column(
+                      children: [
+                        RadioListTile<CompressionQuality>(
+                          title: const Text('Low (Smaller file)'),
+                          subtitle: Text(
+                            '~${_formatFileSize((originalSize * 0.3).round())} estimated',
+                          ),
+                          value: CompressionQuality.low,
+                        ),
+                        RadioListTile<CompressionQuality>(
+                          title: const Text('Medium (Balanced)'),
+                          subtitle: Text(
+                            '~${_formatFileSize((originalSize * 0.5).round())} estimated',
+                          ),
+                          value: CompressionQuality.medium,
+                        ),
+                        RadioListTile<CompressionQuality>(
+                          title: const Text('High (Better quality)'),
+                          subtitle: Text(
+                            '~${_formatFileSize((originalSize * 0.7).round())} estimated',
+                          ),
+                          value: CompressionQuality.high,
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -1090,9 +1073,8 @@ class PdfService {
                         showDialog(
                           context: context,
                           barrierDismissible: false,
-                          builder: (context) => const Center(
-                            child: CircularProgressIndicator(),
-                          ),
+                          builder: (context) =>
+                              const Center(child: CircularProgressIndicator()),
                         );
 
                         try {
@@ -1106,7 +1088,10 @@ class PdfService {
 
                           if (compressedBytes != null) {
                             final compressedSize = compressedBytes.length;
-                            final reduction = ((originalSize - compressedSize) / originalSize * 100);
+                            final reduction =
+                                ((originalSize - compressedSize) /
+                                originalSize *
+                                100);
 
                             // Show success with size comparison
                             await showDialog(
@@ -1117,8 +1102,12 @@ class PdfService {
                                   mainAxisSize: MainAxisSize.min,
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text('Original: ${_formatFileSize(originalSize)}'),
-                                    Text('Compressed: ${_formatFileSize(compressedSize)}'),
+                                    Text(
+                                      'Original: ${_formatFileSize(originalSize)}',
+                                    ),
+                                    Text(
+                                      'Compressed: ${_formatFileSize(compressedSize)}',
+                                    ),
                                     const SizedBox(height: 8),
                                     Text(
                                       'Reduced by ${reduction.toStringAsFixed(1)}%',
@@ -1139,10 +1128,15 @@ class PdfService {
                                   TextButton(
                                     onPressed: () async {
                                       Navigator.pop(context);
-                                      final fileName = '${pdfFileName}_compressed';
+                                      final fileName =
+                                          '${pdfFileName}_compressed';
                                       // Use pdfService instance to call showPdfOptions
                                       final service = PdfService();
-                                      await service.showPdfOptions(context, compressedBytes, fileName);
+                                      await service.showPdfOptions(
+                                        context,
+                                        compressedBytes,
+                                        fileName,
+                                      );
                                     },
                                     child: const Text('Save/Share'),
                                   ),
@@ -1190,7 +1184,7 @@ class PdfService {
       document.dispose();
       return extractedText;
     } catch (e) {
-      print('Error extracting text from PDF: $e');
+      developer.log('Error extracting text from PDF', error: e);
       return '';
     }
   }
@@ -1204,7 +1198,8 @@ class PdfService {
       final archive = Archive();
 
       // Create [Content_Types].xml
-      final contentTypes = '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+      final contentTypes =
+          '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
 <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
 <Default Extension="xml" ContentType="application/xml"/>
@@ -1220,7 +1215,8 @@ class PdfService {
           .replaceAll('"', '&quot;')
           .replaceAll("'", '&apos;');
 
-      final documentXml = '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+      final documentXml =
+          '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
 <w:body>
 <w:p>
@@ -1238,23 +1234,44 @@ class PdfService {
 </Relationships>''';
 
       // Create word/_rels/document.xml.rels
-      final wordRels = '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+      final wordRels =
+          '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
 </Relationships>''';
 
       // Add files to archive
-      archive.addFile(ArchiveFile('[Content_Types].xml', contentTypes.length, utf8.encode(contentTypes)));
-      archive.addFile(ArchiveFile('word/document.xml', documentXml.length, utf8.encode(documentXml)));
-      archive.addFile(ArchiveFile('_rels/.rels', rels.length, utf8.encode(rels)));
-      archive.addFile(ArchiveFile('word/_rels/document.xml.rels', wordRels.length, utf8.encode(wordRels)));
+      archive.addFile(
+        ArchiveFile(
+          '[Content_Types].xml',
+          contentTypes.length,
+          utf8.encode(contentTypes),
+        ),
+      );
+      archive.addFile(
+        ArchiveFile(
+          'word/document.xml',
+          documentXml.length,
+          utf8.encode(documentXml),
+        ),
+      );
+      archive.addFile(
+        ArchiveFile('_rels/.rels', rels.length, utf8.encode(rels)),
+      );
+      archive.addFile(
+        ArchiveFile(
+          'word/_rels/document.xml.rels',
+          wordRels.length,
+          utf8.encode(wordRels),
+        ),
+      );
 
       // Create ZIP file
       final zipEncoder = ZipEncoder();
       final zipData = zipEncoder.encode(archive);
-      
+
       return Uint8List.fromList(zipData);
     } catch (e) {
-      print('Error creating Word document: $e');
+      developer.log('Error creating Word document', error: e);
       return null;
     }
   }
@@ -1264,16 +1281,18 @@ class PdfService {
     try {
       // Extract text from PDF
       final extractedText = await extractTextFromPdf(pdfBytes);
-      
+
       if (extractedText.isEmpty) {
-        throw Exception('No text could be extracted from PDF. The PDF might be image-based or scanned.');
+        throw Exception(
+          'No text could be extracted from PDF. The PDF might be image-based or scanned.',
+        );
       }
 
       // Create Word document from extracted text
       final wordBytes = await createWordDocumentFromText(extractedText);
       return wordBytes;
     } catch (e) {
-      print('Error converting PDF to Word: $e');
+      developer.log('Error converting PDF to Word', error: e);
       rethrow;
     }
   }
@@ -1333,9 +1352,7 @@ class PdfService {
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (context) => const Center(
-          child: CircularProgressIndicator(),
-        ),
+        builder: (context) => const Center(child: CircularProgressIndicator()),
       );
 
       try {
@@ -1348,15 +1365,16 @@ class PdfService {
         if (wordBytes != null) {
           // Save Word document
           final directory = await getApplicationDocumentsDirectory();
-          final wordFile = File('${directory.path}/${pdfFileName}.docx');
+          final wordFile = File('${directory.path}/$pdfFileName.docx');
           await wordFile.writeAsBytes(wordBytes);
 
           // Show success dialog
+          if (!context.mounted) return;
           await showDialog(
             context: context,
             builder: (context) => AlertDialog(
               title: const Text('PDF Converted to Word'),
-              content: Text('Word document saved as "${pdfFileName}.docx"'),
+              content: Text('Word document saved as "$pdfFileName.docx"'),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
@@ -1366,10 +1384,9 @@ class PdfService {
                   onPressed: () async {
                     Navigator.pop(context);
                     // Share the Word document
-                    await Share.shareXFiles(
-                      [XFile(wordFile.path)],
-                      subject: pdfFileName,
-                    );
+                    await Share.shareXFiles([
+                      XFile(wordFile.path),
+                    ], subject: pdfFileName);
                   },
                   child: const Text('Share'),
                 ),
@@ -1573,4 +1590,3 @@ enum CompressionQuality {
 }
 
 final pdfService = PdfService();
-

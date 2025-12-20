@@ -9,14 +9,14 @@ import '../bloc/save_image_bloc.dart';
 
 class ImagesPreview extends StatefulWidget {
   static const route = '/images_preview';
-  const ImagesPreview({Key? key}) : super(key: key);
+  const ImagesPreview({super.key});
 
   @override
   State<ImagesPreview> createState() => _ImagesPreviewState();
 }
 
 class _ImagesPreviewState extends State<ImagesPreview> {
-  PageController _pageController = PageController();
+  final PageController _pageController = PageController();
   bool _isCreatingPdf = false;
 
   @override
@@ -39,16 +39,17 @@ class _ImagesPreviewState extends State<ImagesPreview> {
 
     try {
       final pdfBytes = await pdfService.createPdfFromImages(images);
-      final fileName = 'Document_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}';
-      
+      final fileName =
+          'Document_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}';
+
       if (mounted) {
         await pdfService.showPdfOptions(context, pdfBytes, fileName);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error creating PDF: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error creating PDF: $e')));
       }
     } finally {
       if (mounted) {
@@ -66,7 +67,7 @@ class _ImagesPreviewState extends State<ImagesPreview> {
           stream: currentImageBloc.currentImageStream,
           builder: (context, AsyncSnapshot<List<CurrentImage>> snapshot) {
             final list = snapshot.data ?? [];
-            
+
             if (list.isEmpty) {
               return Center(
                 child: Column(
@@ -91,7 +92,7 @@ class _ImagesPreviewState extends State<ImagesPreview> {
                 ),
               );
             }
-            
+
             return Column(
               children: [
                 Expanded(
@@ -120,7 +121,8 @@ class _ImagesPreviewState extends State<ImagesPreview> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       IconButton(
-                        onPressed: _pageController.hasClients &&
+                        onPressed:
+                            _pageController.hasClients &&
                                 (_pageController.page?.toInt() ?? 0) > 0
                             ? () {
                                 _pageController.previousPage(
@@ -148,8 +150,10 @@ class _ImagesPreviewState extends State<ImagesPreview> {
                         },
                       ),
                       IconButton(
-                        onPressed: _pageController.hasClients &&
-                                (_pageController.page?.toInt() ?? 0) < list.length - 1
+                        onPressed:
+                            _pageController.hasClients &&
+                                (_pageController.page?.toInt() ?? 0) <
+                                    list.length - 1
                             ? () {
                                 _pageController.nextPage(
                                   duration: const Duration(milliseconds: 300),
@@ -165,12 +169,15 @@ class _ImagesPreviewState extends State<ImagesPreview> {
                 ),
                 // Action buttons
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 16,
+                  ),
                   decoration: BoxDecoration(
                     color: CustomColors.primary,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
+                        color: Colors.black.withValues(alpha: 0.2),
                         blurRadius: 10,
                         offset: const Offset(0, -2),
                       ),
@@ -220,7 +227,7 @@ class _ImagesPreviewState extends State<ImagesPreview> {
                           icon: _isCreatingPdf
                               ? const SizedBox.shrink()
                               : const Icon(Icons.picture_as_pdf),
-                        )
+                        ),
                       ],
                     ),
                   ),

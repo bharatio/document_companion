@@ -10,21 +10,20 @@ import '../../utils/crop_photo_document_style.dart';
 class AppBarCropPhoto extends StatelessWidget {
   final CropPhotoDocumentStyle cropPhotoDocumentStyle;
 
-  const AppBarCropPhoto({
-    Key? key,
-    required this.cropPhotoDocumentStyle,
-  }) : super(key: key);
+  const AppBarCropPhoto({super.key, required this.cropPhotoDocumentStyle});
 
   @override
   Widget build(BuildContext context) {
-    if (cropPhotoDocumentStyle.hideAppBarDefault) return const SizedBox.shrink();
+    if (cropPhotoDocumentStyle.hideAppBarDefault) {
+      return const SizedBox.shrink();
+    }
 
     return BlocBuilder<AppBloc, AppState>(
       buildWhen: (previous, current) =>
           current.statusCropPhoto != previous.statusCropPhoto,
       builder: (context, state) {
         final isCropping = state.statusCropPhoto == AppStatus.loading;
-        
+
         return Positioned(
           top: 0,
           left: 0,
@@ -38,8 +37,8 @@ class AppBarCropPhoto extends StatelessWidget {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.black.withOpacity(0.7),
-                    Colors.black.withOpacity(0.3),
+                    Colors.black.withValues(alpha: 0.7),
+                    Colors.black.withValues(alpha: 0.3),
                     Colors.transparent,
                   ],
                 ),
@@ -50,15 +49,15 @@ class AppBarCropPhoto extends StatelessWidget {
                   // Back button
                   Container(
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.5),
+                      color: Colors.black.withValues(alpha: 0.5),
                       shape: BoxShape.circle,
                     ),
                     child: IconButton(
                       onPressed: isCropping
                           ? null
                           : () => context
-                              .read<DocumentScannerController>()
-                              .changePage(AppPages.takePhoto),
+                                .read<DocumentScannerController>()
+                                .changePage(AppPages.takePhoto),
                       icon: const Icon(
                         Icons.arrow_back_rounded,
                         color: Colors.white,
@@ -89,7 +88,9 @@ class AppBarCropPhoto extends StatelessWidget {
                           )
                         : const Icon(Icons.check_rounded),
                     label: Text(
-                      isCropping ? 'Cropping...' : cropPhotoDocumentStyle.textButtonSave,
+                      isCropping
+                          ? 'Cropping...'
+                          : cropPhotoDocumentStyle.textButtonSave,
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: CustomColors.primary,

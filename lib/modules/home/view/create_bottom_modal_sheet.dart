@@ -8,16 +8,14 @@ import 'package:flutter/material.dart';
 import 'create_folder_bottom_modal_sheet.dart';
 
 class CreateBottomModalSheet extends StatelessWidget {
-  const CreateBottomModalSheet({Key? key}) : super(key: key);
+  const CreateBottomModalSheet({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
         color: CustomColors.surface,
-        borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(24),
-        ),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -69,11 +67,16 @@ class CreateBottomModalSheet extends StatelessWidget {
                       color: CustomColors.accent,
                       onTap: () {
                         Navigator.pop(context);
-                        fileImportService.showImportOptions(context).then((_) async {
+                        fileImportService.showImportOptions(context).then((
+                          _,
+                        ) async {
                           // Navigate to images preview if images were imported
-                          await Future.delayed(const Duration(milliseconds: 500));
+                          await Future.delayed(
+                            const Duration(milliseconds: 500),
+                          );
                           if (context.mounted) {
-                            final images = await currentImageBloc.getCurrentImagesList();
+                            final images = await currentImageBloc
+                                .getCurrentImagesList();
                             if (images.isNotEmpty && context.mounted) {
                               Navigator.pushNamed(context, ImagesPreview.route);
                             }
@@ -128,14 +131,10 @@ class _CreateOption extends StatelessWidget {
               width: 64,
               height: 64,
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: Icon(
-                icon,
-                color: color,
-                size: 32,
-              ),
+              child: Icon(icon, color: color, size: 32),
             ),
             const SizedBox(height: 12),
             Text(

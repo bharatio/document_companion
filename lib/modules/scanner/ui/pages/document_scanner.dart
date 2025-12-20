@@ -18,7 +18,7 @@ import 'take_photo_document_page.dart';
 
 class DocumentScanner extends StatelessWidget {
   ///
-  final DocumentScannerController? controller;
+  final DocumentScannerController controller;
 
   ///
   final GeneralStyles generalStyles;
@@ -43,8 +43,8 @@ class DocumentScanner extends StatelessWidget {
   final OnSave onSave;
 
   const DocumentScanner({
-    Key? key,
-    this.controller,
+    super.key,
+    required this.controller,
     this.generalStyles = const GeneralStyles(),
     this.pageTransitionBuilder,
     this.initialCameraLensDirection = CameraLensDirection.back,
@@ -53,19 +53,14 @@ class DocumentScanner extends StatelessWidget {
     this.cropPhotoDocumentStyle = const CropPhotoDocumentStyle(),
     this.editPhotoDocumentStyle = const EditPhotoDocumentStyle(),
     required this.onSave,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
     final Dialogs dialogs = Dialogs();
 
-    DocumentScannerController _controller = DocumentScannerController();
-    if (controller != null) {
-      _controller = controller!;
-    }
-
     return BlocProvider(
-      create: (BuildContext context) => _controller.bloc
+      create: (BuildContext context) => controller.bloc
         ..add(
           AppCameraInitialized(
             cameraLensDirection: initialCameraLensDirection,
@@ -73,7 +68,7 @@ class DocumentScanner extends StatelessWidget {
           ),
         ),
       child: RepositoryProvider<DocumentScannerController>(
-        create: (context) => _controller,
+        create: (context) => controller,
         child: MultiBlocListener(
           listeners: [
             // ? Show default dialogs in Take Photo
@@ -170,13 +165,12 @@ class _View extends StatelessWidget {
   final OnSave onSave;
 
   const _View({
-    Key? key,
     this.pageTransitionBuilder,
     required this.takePhotoDocumentStyle,
     required this.cropPhotoDocumentStyle,
     required this.editPhotoDocumentStyle,
     required this.onSave,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -210,7 +204,8 @@ class _View extends StatelessWidget {
 
         return AnimatedSwitcher(
           duration: const Duration(milliseconds: 400),
-          transitionBuilder: pageTransitionBuilder ??
+          transitionBuilder:
+              pageTransitionBuilder ??
               (child, animation) {
                 const begin = Offset(-1.0, 0.0);
                 const end = Offset.zero;

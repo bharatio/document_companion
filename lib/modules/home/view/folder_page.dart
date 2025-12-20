@@ -13,7 +13,7 @@ import '../models/folder_view_model.dart';
 
 class FolderPage extends StatefulWidget {
   static const route = '/folder/folder_page';
-  const FolderPage({Key? key, required this.folder}) : super(key: key);
+  const FolderPage({super.key, required this.folder});
 
   final FolderViewModel folder;
   @override
@@ -103,7 +103,7 @@ class _FolderPageState extends State<FolderPage> {
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
-                      color: CustomColors.primary.withOpacity(0.1),
+                      color: CustomColors.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
@@ -118,7 +118,7 @@ class _FolderPageState extends State<FolderPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          widget.folder.folder_name,
+                          widget.folder.folderName,
                           style: Theme.of(context).textTheme.titleLarge,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -139,7 +139,9 @@ class _FolderPageState extends State<FolderPage> {
                   _isGridView = !_isGridView;
                 });
               },
-              icon: Icon(_isGridView ? Icons.view_list_rounded : Icons.grid_view_rounded),
+              icon: Icon(
+                _isGridView ? Icons.view_list_rounded : Icons.grid_view_rounded,
+              ),
               tooltip: _isGridView ? 'List view' : 'Grid view',
             ),
             IconButton(
@@ -174,7 +176,10 @@ class _FolderPageState extends State<FolderPage> {
                     children: [
                       Icon(Icons.delete_rounded, color: Colors.red, size: 20),
                       SizedBox(width: 12),
-                      Text('Delete Folder', style: TextStyle(color: Colors.red)),
+                      Text(
+                        'Delete Folder',
+                        style: TextStyle(color: Colors.red),
+                      ),
                     ],
                   ),
                 ),
@@ -189,7 +194,7 @@ class _FolderPageState extends State<FolderPage> {
           if (snapshot.hasData) {
             final images = snapshot.data ?? [];
             if (images.isEmpty) {
-              return _EmptyFolderState(folderName: widget.folder.folder_name);
+              return _EmptyFolderState(folderName: widget.folder.folderName);
             }
             return _ImageGridView(
               images: images,
@@ -297,11 +302,10 @@ class _ImageCard extends StatelessWidget {
           children: [
             Expanded(
               child: ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                child: Image.memory(
-                  image.image,
-                  fit: BoxFit.cover,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(16),
                 ),
+                child: Image.memory(image.image, fit: BoxFit.cover),
               ),
             ),
             Padding(
@@ -356,10 +360,7 @@ class _ImageListTile extends StatelessWidget {
             fit: BoxFit.cover,
           ),
         ),
-        title: Text(
-          image.name,
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
+        title: Text(image.name, style: Theme.of(context).textTheme.titleMedium),
         subtitle: Text(
           image.createdOn,
           style: Theme.of(context).textTheme.bodySmall,
@@ -370,10 +371,8 @@ class _ImageListTile extends StatelessWidget {
             showModalBottomSheet(
               context: context,
               backgroundColor: Colors.transparent,
-              builder: (context) => _DocumentOptionsSheet(
-                image: image,
-                folderId: folderId,
-              ),
+              builder: (context) =>
+                  _DocumentOptionsSheet(image: image, folderId: folderId),
             );
           },
         ),
@@ -410,13 +409,13 @@ class _EmptyFolderState extends StatelessWidget {
               width: 120,
               height: 120,
               decoration: BoxDecoration(
-                color: CustomColors.primary.withOpacity(0.1),
+                color: CustomColors.primary.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 Icons.description_outlined,
                 size: 64,
-                color: CustomColors.primary.withOpacity(0.5),
+                color: CustomColors.primary.withValues(alpha: 0.5),
               ),
             ),
             const SizedBox(height: 24),
@@ -463,10 +462,7 @@ class _DocumentOptionsSheet extends StatelessWidget {
   final ImageModel image;
   final String folderId;
 
-  const _DocumentOptionsSheet({
-    required this.image,
-    required this.folderId,
-  });
+  const _DocumentOptionsSheet({required this.image, required this.folderId});
 
   @override
   Widget build(BuildContext context) {
@@ -518,7 +514,11 @@ class _DocumentOptionsSheet extends StatelessWidget {
               title: const Text('Delete', style: TextStyle(color: Colors.red)),
               onTap: () {
                 Navigator.pop(context);
-                documentService.showDeleteConfirmation(context, image, folderId);
+                documentService.showDeleteConfirmation(
+                  context,
+                  image,
+                  folderId,
+                );
               },
             ),
             const SizedBox(height: 8),

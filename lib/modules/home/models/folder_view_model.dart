@@ -1,12 +1,12 @@
 class FolderViewModel {
   FolderViewModel({
     required this.id,
-    required this.folder_name,
-    required this.created_on,
-    required this.modified_on,
+    required this.folderName,
+    required this.createdOn,
+    required this.modifiedOn,
   });
   String id;
-  String folder_name;
-  String created_on;
-  String modified_on;
+  String folderName;
+  String createdOn;
+  String modifiedOn;
 }

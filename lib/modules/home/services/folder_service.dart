@@ -11,7 +11,7 @@ class FolderService {
     FolderViewModel folder,
   ) async {
     final TextEditingController nameController = TextEditingController(
-      text: folder.folder_name,
+      text: folder.folderName,
     );
 
     await showDialog(
@@ -38,11 +38,13 @@ class FolderService {
                   folder.id,
                   nameController.text.trim(),
                 );
-                
+
                 if (context.mounted) {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Folder renamed successfully')),
+                    const SnackBar(
+                      content: Text('Folder renamed successfully'),
+                    ),
                   );
                 }
               }
@@ -61,15 +63,17 @@ class FolderService {
   ) async {
     // Check if folder has images
     final imageCount = await imageBloc.getImageCount(folder.id);
-    
+
+    if (!context.mounted) return;
     await showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Folder'),
         content: Text(
           imageCount > 0
-              ? 'Are you sure you want to delete "${folder.folder_name}"? This will also delete all ${imageCount} document${imageCount == 1 ? '' : 's'} in this folder.'
-              : 'Are you sure you want to delete "${folder.folder_name}"?',
+              // ignore: unnecessary_brace_in_string_interps
+              ? 'Are you sure you want to delete "${folder.folderName}"? This will also delete all ${imageCount} document${imageCount == 1 ? '' : 's'} in this folder.'
+              : 'Are you sure you want to delete "${folder.folderName}"?',
         ),
         actions: [
           TextButton(
@@ -82,16 +86,18 @@ class FolderService {
               if (imageCount > 0) {
                 await imageDatabaseHandler.deleteImagesByFolderId(folder.id);
               }
-              
+
               // Delete the folder
               await folderBloc.deleteFolder(folder.id);
-              
+
               if (context.mounted) {
                 Navigator.pop(context); // Close dialog
                 Navigator.pop(context); // Go back to homepage
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('"${folder.folder_name}" deleted successfully'),
+                    content: Text(
+                      '"${folder.folderName}" deleted successfully',
+                    ),
                   ),
                 );
               }
@@ -106,4 +112,3 @@ class FolderService {
 }
 
 final folderService = FolderService();
-

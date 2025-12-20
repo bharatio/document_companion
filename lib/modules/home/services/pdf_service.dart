@@ -1252,7 +1252,7 @@ class PdfService {
       final zipEncoder = ZipEncoder();
       final zipData = zipEncoder.encode(archive);
       
-      return zipData != null ? Uint8List.fromList(zipData) : null;
+      return Uint8List.fromList(zipData);
     } catch (e) {
       print('Error creating Word document: $e');
       return null;
@@ -1930,7 +1930,7 @@ class _PageRangeSelectorState extends State<_PageRangeSelector> {
       final zipEncoder = ZipEncoder();
       final zipData = zipEncoder.encode(archive);
       
-      return zipData != null ? Uint8List.fromList(zipData) : null;
+      return Uint8List.fromList(zipData);
     } catch (e) {
       print('Error creating Word document: $e');
       return null;

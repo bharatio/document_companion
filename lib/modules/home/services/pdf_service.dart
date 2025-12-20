@@ -1,14 +1,21 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:document_companion/local_database/handler/image_database_handler.dart';
 import 'package:document_companion/local_database/models/current_image.dart';
+import 'package:document_companion/local_database/models/image_model.dart';
+import 'package:document_companion/modules/home/bloc/folder_bloc.dart';
+import 'package:document_companion/modules/home/bloc/image_bloc.dart';
+import 'package:document_companion/modules/home/models/folder_view_model.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:uuid/uuid.dart';
 
 class PdfService {
   /// Creates a PDF from a list of images
@@ -320,6 +327,270 @@ class PdfService {
         );
       }
     }
+  }
+
+  /// Imports PDF file and converts pages to images, saving them to a folder
+  Future<void> importPdfToFolder(
+    BuildContext context,
+    File pdfFile,
+    String folderId,
+    String pdfFileName,
+  ) async {
+    try {
+      final pdfBytes = await pdfFile.readAsBytes();
+      final uuid = Uuid();
+      final now = DateTime.now();
+      final timestamp = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
+      int pageNumber = 1;
+
+      // Convert PDF pages to images and save to folder
+      await for (var img in Printing.raster(pdfBytes, dpi: 150)) {
+        try {
+          final imgBytes = await img.toPng();
+          
+          // Create image name based on PDF filename and page number
+          final imageName = '${pdfFileName}_Page_$pageNumber';
+          
+          final imageModel = ImageModel(
+            id: uuid.v4(),
+            folderId: folderId,
+            image: imgBytes,
+            name: imageName,
+            createdOn: timestamp,
+            modifiedOn: timestamp,
+            size: imgBytes.lengthInBytes,
+            width: img.width,
+            height: img.height,
+          );
+          
+          await imageDatabaseHandler.insertImage(imageModel);
+          pageNumber++;
+        } catch (e) {
+          print('Error converting PDF page $pageNumber to image: $e');
+          // Continue with next page
+        }
+      }
+
+      // Refresh folder images
+      imageBloc.fetchImagesByFolderId(folderId);
+    } catch (e) {
+      print('Error importing PDF: $e');
+      rethrow;
+    }
+  }
+
+  /// Shows PDF import dialog with folder selection
+  Future<void> showImportPdfDialog(BuildContext context) async {
+    try {
+      // Show file picker to select PDF
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf'],
+        allowMultiple: false,
+      );
+
+      if (result == null || result.files.isEmpty) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('No PDF selected'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+        return;
+      }
+
+      final platformFile = result.files.first;
+      File? pdfFile;
+      
+      if (platformFile.path != null) {
+        pdfFile = File(platformFile.path!);
+      } else if (platformFile.bytes != null) {
+        // Handle web platform where path might be null
+        final directory = await getTemporaryDirectory();
+        pdfFile = File('${directory.path}/${platformFile.name}');
+        await pdfFile.writeAsBytes(platformFile.bytes!);
+      }
+
+      if (pdfFile == null) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Error reading PDF file'),
+              backgroundColor: Colors.red,
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+        return;
+      }
+
+      // Get PDF filename without extension
+      final pdfFileName = platformFile.name.replaceAll('.pdf', '');
+
+      if (!context.mounted) return;
+
+      // Show folder selection dialog
+      await _showFolderSelectionDialog(
+        context,
+        pdfFile,
+        pdfFileName,
+      );
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+
+  /// Shows folder selection dialog for PDF import
+  Future<void> _showFolderSelectionDialog(
+    BuildContext context,
+    File pdfFile,
+    String pdfFileName,
+  ) async {
+    // Fetch folders first
+    await folderBloc.fetchFolders();
+
+    await showDialog(
+      context: context,
+      builder: (context) => StreamBuilder<List<FolderViewModel>>(
+        stream: folderBloc.folderList,
+        builder: (context, snapshot) {
+          final folders = snapshot.data ?? [];
+
+          if (folders.isEmpty) {
+            return AlertDialog(
+              title: const Text('No Folders'),
+              content: const Text(
+                'Please create a folder first before importing PDFs.',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('OK'),
+                ),
+              ],
+            );
+          }
+
+          return StatefulBuilder(
+            builder: (context, setState) {
+              String? selectedFolderId;
+
+              return AlertDialog(
+                title: const Text('Select Folder'),
+                content: SizedBox(
+                  width: double.maxFinite,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Import "$pdfFileName.pdf" to:',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                      const SizedBox(height: 16),
+                      Flexible(
+                        child: ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: folders.length,
+                          itemBuilder: (context, index) {
+                            final folder = folders[index];
+
+                            return RadioListTile<String>(
+                              title: Text(folder.folder_name),
+                              value: folder.id,
+                              groupValue: selectedFolderId,
+                              onChanged: (value) {
+                                setState(() {
+                                  selectedFolderId = value;
+                                });
+                              },
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Cancel'),
+                  ),
+                  TextButton(
+                    onPressed: selectedFolderId == null
+                        ? null
+                        : () async {
+                            Navigator.pop(context); // Close dialog
+
+                            if (!context.mounted) return;
+
+                            // Show loading dialog
+                            showDialog(
+                              context: context,
+                              barrierDismissible: false,
+                              builder: (context) => const Center(
+                                child: CircularProgressIndicator(),
+                              ),
+                            );
+
+                            try {
+                              await importPdfToFolder(
+                                context,
+                                pdfFile,
+                                selectedFolderId!,
+                                pdfFileName,
+                              );
+
+                              if (!context.mounted) return;
+
+                              // Close loading dialog
+                              Navigator.pop(context);
+
+                              // Show success message
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'PDF imported successfully to folder',
+                                  ),
+                                  backgroundColor: Colors.green,
+                                  duration: const Duration(seconds: 2),
+                                ),
+                              );
+                            } catch (e) {
+                              if (!context.mounted) return;
+
+                              // Close loading dialog
+                              if (Navigator.canPop(context)) {
+                                Navigator.pop(context);
+                              }
+
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Error importing PDF: $e'),
+                                  backgroundColor: Colors.red,
+                                  duration: const Duration(seconds: 3),
+                                ),
+                              );
+                            }
+                          },
+                    child: const Text('Import'),
+                  ),
+                ],
+              );
+            },
+          );
+        },
+      ),
+    );
   }
 }
 

@@ -73,12 +73,7 @@ class _HomepageState extends State<Homepage> {
         _handleImageToPdf(context);
         break;
       case 4: // Import PDF
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Import PDF feature coming soon'),
-            duration: Duration(seconds: 2),
-          ),
-        );
+        pdfService.showImportPdfDialog(context);
         break;
     }
   }

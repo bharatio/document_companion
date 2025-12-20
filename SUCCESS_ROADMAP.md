@@ -150,43 +150,45 @@
 
 **Multiple Share Options**
 - [ ] **Share via QR Code** - Generate QR codes for documents
-- [ ] **Share via Link** - Create shareable links (if cloud added)
 - [ ] **Email Integration** - Direct email from app
 - [ ] **Social Media Sharing** - Share to social platforms
 - [ ] **Share History** - Track shared documents
-- [ ] **Share Permissions** - Control who can view/edit
+- [ ] **Nearby Share** - Share via Bluetooth/WiFi Direct (Android)
+- [ ] **AirDrop** - Share via AirDrop (iOS)
+- [ ] **Share via System Share Sheet** - Already implemented ✅
 
 **Export Options**
 - [ ] **Multiple Formats** - Export as PDF, PNG, JPEG, TIFF
 - [ ] **Custom Export Settings** - Quality, size, format options
 - [ ] **Batch Export** - Export multiple documents
 - [ ] **Export Presets** - Save export configurations
+- [ ] **Save to Files App** - Direct save to device file system
 
-**Why**: Easy sharing = more users. Users share good tools.
+**Why**: Easy sharing = more users. Users share good tools. Offline-first sharing keeps privacy intact.
 
-#### 4.2 Cloud Integration ⭐⭐⭐
+#### 4.2 Local Backup & Export ⭐⭐⭐
 
-**Cloud Storage**
-- [ ] **Google Drive** - Sync with Google Drive
-- [ ] **Dropbox** - Sync with Dropbox
-- [ ] **iCloud** - iOS iCloud integration
-- [ ] **OneDrive** - Microsoft OneDrive
-- [ ] **Auto-sync** - Automatic cloud backup
-- [ ] **Selective Sync** - Choose what to sync
-- [ ] **Offline Mode** - Work offline, sync when online
+**Backup Features**
+- [ ] **Manual Backup** - Export all documents to ZIP file
+- [ ] **Automatic Local Backup** - Schedule backups to device storage
+- [ ] **Backup to External Storage** - Save to SD card (Android)
+- [ ] **Backup to Files App** - Save to Files app (iOS)
+- [ ] **Restore from Backup** - Import from backup file
+- [ ] **Selective Backup** - Choose folders/documents to backup
+- [ ] **Backup Encryption** - Encrypt backup files
 
-**Why**: Cloud sync is essential. Users expect it. Without it, users will switch.
+**Why**: Users need backup without cloud. Privacy-focused approach differentiates from competitors.
 
-#### 4.3 Collaboration Features ⭐⭐
+#### 4.3 Collaboration Features (Local) ⭐⭐
 
-**Team Features**
-- [ ] **Shared Folders** - Share folders with team members
-- [ ] **Comments** - Add comments to documents
-- [ ] **Version History** - Track document changes
-- [ ] **Activity Log** - See who did what
-- [ ] **Permissions** - Control access levels
+**Local Collaboration**
+- [ ] **Export for Sharing** - Export documents for sharing via other apps
+- [ ] **Batch Share** - Share multiple documents at once
+- [ ] **Share via QR Code** - Generate QR codes for easy transfer
+- [ ] **Document Metadata** - Add notes/comments to documents (local only)
+- [ ] **Version History** - Track document changes locally
 
-**Why**: Teams need collaboration. This opens B2B market.
+**Why**: Privacy-first collaboration. Users can share via their preferred cloud service if needed.
 
 ---
 
@@ -282,18 +284,20 @@
 #### 7.2 Monetization Strategy ⭐⭐
 
 **Freemium Model**
-- [ ] **Free Tier** - Basic features (scan, convert, organize)
-- [ ] **Premium Tier** - Advanced features (OCR, cloud sync, editing)
+- [ ] **Free Tier** - Basic features (scan, convert, organize, share)
+- [ ] **Premium Tier** - Advanced features (OCR, editing, advanced PDF tools)
 - [ ] **Subscription Plans** - Monthly/yearly options
 - [ ] **One-time Purchase** - Lifetime premium option
 
 **Premium Features**
-- Unlimited cloud storage
-- Advanced OCR (multi-language)
+- Advanced OCR (multi-language, higher accuracy)
 - Document editing & annotations
+- Advanced PDF tools (watermark, password protection, redaction)
 - Priority support
 - Ad-free experience
 - Advanced templates
+- Unlimited document processing
+- Batch operations (unlimited)
 
 **Why**: Sustainable revenue enables continued development.
 
@@ -310,10 +314,11 @@
 
 ### Feature Adoption
 - **OCR Usage** - Target: 30% of users
-- **Cloud Sync** - Target: 25% of users
+- **Local Backup** - Target: 40% of users
 - **Batch Operations** - Target: 40% of users
 - **Tags** - Target: 35% of users
 - **Sharing** - Target: 50% of users
+- **PDF Tools** - Target: 60% of users (merge, split, compress)
 
 ### Business Metrics
 - **Conversion Rate** - Target: 5% free to premium
@@ -357,12 +362,13 @@
 ### What Makes This App Unique
 
 1. **All-in-One Solution** - Scan, organize, convert, edit, share - all in one app
-2. **Offline-First** - Works without internet, syncs when available
-3. **Privacy-Focused** - Local storage, optional cloud, no data mining
-4. **Fast & Lightweight** - Optimized for speed, small app size
+2. **100% Offline-First** - Works completely without internet, no cloud required
+3. **Privacy-Focused** - All data stored locally, no cloud sync, no data mining, no tracking
+4. **Fast & Lightweight** - Optimized for speed, small app size, no cloud overhead
 5. **Beautiful UI** - Modern Material 3 design, dark mode
 6. **Cross-Platform** - Android, iOS, Web, Desktop support
 7. **Free Core Features** - Most features free, premium optional
+8. **True Privacy** - Your documents never leave your device unless you explicitly share them
 
 ### Market Positioning
 
@@ -391,10 +397,10 @@
 
 ### Should Have (P1) - Do Next
 1. OCR & Text Recognition
-2. Cloud Integration
+2. Local Backup & Export Features
 3. Document Editing & Annotations
 4. Tags System
-5. Security Features
+5. Security Features (App Lock, Encryption)
 
 ### Nice to Have (P2) - Do Later
 1. Collaboration Features

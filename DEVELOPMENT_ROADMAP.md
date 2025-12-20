@@ -217,32 +217,33 @@
 
 ## 🌟 Phase 3: Premium Features (Weeks 9-12)
 
-### Priority 7: Cloud & Sync
+### Priority 7: Local Backup & Export
 
-#### 7.1 Cloud Storage Integration
-- [ ] Google Drive integration
-- [ ] Dropbox integration
-- [ ] iCloud integration (iOS)
-- [ ] OneDrive integration
-- [ ] Sync settings
-- [ ] Conflict resolution
-- [ ] Offline mode support
+#### 7.1 Local Backup Features
+- [ ] Manual backup to device storage
+- [ ] Automatic local backup (scheduled)
+- [ ] Backup to external storage (SD card on Android)
+- [ ] Backup to Files app (iOS)
+- [ ] Backup encryption
+- [ ] Selective backup (choose folders/documents)
+- [ ] Backup compression
 
-#### 7.2 Backup & Restore
-- [ ] Automatic backup
-- [ ] Manual backup
-- [ ] Restore from backup
+#### 7.2 Restore & Import
+- [ ] Restore from backup file
+- [ ] Import from ZIP archive
 - [ ] Export/import database
-- [ ] Cloud backup option
+- [ ] Verify backup integrity
+- [ ] Partial restore (selective restore)
 
 ### Priority 8: Sharing & Collaboration
 
 #### 8.1 Document Sharing
-- [ ] Share via system share sheet
+- [ ] Share via system share sheet (already implemented ✅)
 - [ ] Email integration
 - [ ] QR code generation for documents
-- [ ] Link sharing (if cloud storage added)
-- [ ] Export options (PDF, PNG, JPEG)
+- [ ] Nearby Share (Android) / AirDrop (iOS)
+- [ ] Export options (PDF, PNG, JPEG, TIFF)
+- [ ] Save to Files app
 
 #### 8.2 Collaboration Features
 - [ ] Share folders with others
@@ -413,9 +414,10 @@
 ### Feature Adoption
 - % of users using search
 - % of users using tags
-- % of users using cloud sync
+- % of users using local backup
 - % of users using OCR
 - % of users sharing documents
+- % of users using PDF tools (merge, split, compress)
 
 ### Performance
 - App launch time < 2 seconds

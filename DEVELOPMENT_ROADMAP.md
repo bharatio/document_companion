@@ -52,31 +52,61 @@
 
 ---
 
-## 🚀 Phase 1: Core Enhancements (Next 2-4 Weeks)
+## 🚀 Phase 1: Core PDF Features - Make it the BEST Document App (Next 2-4 Weeks)
 
-### Priority 1: File Import & Management
+### Priority 1: PDF Services (HIGH PRIORITY - Core Differentiators)
 
-#### 1.1 Gallery Import
-- [ ] Add `image_picker` package integration
-- [ ] Import single/multiple images from gallery
+#### 1.1 Merge PDF ⭐⭐⭐
+- [ ] Select multiple PDFs from folders
+- [ ] PDF selection UI with preview
+- [ ] Merge order customization (drag & drop)
+- [ ] Page range selection per PDF
+- [ ] Merge preview
+- [ ] Save merged PDF to folder
+- [ ] Share merged PDF
+- [ ] Connect to existing "Merge PDF" button
+
+#### 1.2 Import PDF ⭐⭐⭐
+- [ ] Add `file_picker` package for PDF selection
+- [ ] Import PDF files from device storage
+- [ ] PDF file validation
 - [ ] Import to existing or new folder
-- [ ] Progress indicator for large imports
-- [ ] Image compression options
+- [ ] PDF preview and metadata display
+- [ ] Extract PDF pages as images (optional)
+- [ ] Connect to existing "Import PDF" button
 
-#### 1.2 File Picker Integration
-- [ ] Add `file_picker` package
-- [ ] Import PDF files
-- [ ] Import other document formats
-- [ ] File type validation
-- [ ] File size limits
+#### 1.3 Split PDF ⭐⭐
+- [ ] Select PDF from folders
+- [ ] Page range selection UI
+- [ ] Extract specific pages
+- [ ] Extract page ranges
+- [ ] Save split PDFs to folders
+- [ ] Multiple split options (single pages, ranges)
+- [ ] Share split PDFs
 
-#### 1.3 Image Management Improvements
-- [ ] Rename documents
-- [ ] Delete documents
-- [ ] Move documents between folders
-- [ ] Copy documents
-- [ ] Document metadata (size, date, dimensions)
-- [ ] Thumbnail generation for better performance
+#### 1.4 PDF Compression ⭐⭐
+- [ ] PDF compression algorithms
+- [ ] Compression quality options (Low/Medium/High)
+- [ ] Size reduction preview (before/after)
+- [ ] Batch compression support
+- [ ] Compress and save to folder
+- [ ] Connect to existing "File Compress" button
+
+#### 1.5 PDF to Word Conversion ⭐⭐
+- [ ] PDF parsing and text extraction
+- [ ] Format preservation (tables, lists, formatting)
+- [ ] Word document generation (.docx)
+- [ ] Export options
+- [ ] Quality settings
+- [ ] Connect to existing "PDF to Word" button
+
+### Priority 2: File Import & Management (Already Completed)
+- ✅ Gallery Import - Import single/multiple images from gallery
+- ✅ File Import - Import images to folders
+- ✅ Rename documents
+- ✅ Delete documents
+- ✅ Move documents between folders
+- ✅ Document metadata (size, date, dimensions)
 
 ### Priority 2: Search & Organization
 
@@ -129,36 +159,25 @@
 
 ---
 
-## 🎯 Phase 2: Advanced Features (Weeks 5-8)
+## 🎯 Phase 2: Organization & Productivity Features (Weeks 5-8)
 
-### Priority 4: PDF Services
+### Priority 3: Batch Operations & Efficiency
 
-#### 4.1 PDF to Word Conversion
-- [ ] PDF parsing and text extraction
-- [ ] Format preservation
-- [ ] Word document generation
-- [ ] Export options
-- [ ] Quality settings
+#### 3.1 Batch Operations
+- [ ] Multi-select mode for documents
+- [ ] Batch delete
+- [ ] Batch move/copy between folders
+- [ ] Batch convert to PDF
+- [ ] Batch share
+- [ ] Batch tag
+- [ ] Selection counter and action bar
 
-#### 4.2 Merge PDF
-- [ ] Select multiple PDFs
-- [ ] Merge order customization
-- [ ] Page range selection
-- [ ] Merge preview
-- [ ] Save merged PDF
-
-#### 4.3 PDF Compression
-- [ ] PDF compression algorithms
-- [ ] Compression quality options
-- [ ] Size reduction preview
-- [ ] Batch compression
-
-#### 4.4 Import PDF
-- [ ] PDF file picker
-- [ ] PDF parsing and display
-- [ ] Extract pages from PDF
-- [ ] Convert PDF pages to images
-- [ ] PDF metadata extraction
+#### 3.2 Recent Documents
+- [ ] Track recently accessed documents
+- [ ] Recent documents widget on homepage
+- [ ] Quick access to recent items
+- [ ] Recently viewed folders
+- [ ] Activity timeline
 
 ### Priority 5: Document Editing
 

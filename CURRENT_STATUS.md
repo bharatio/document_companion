@@ -41,15 +41,24 @@
 - [ ] Some UI elements may need refinement
 - [ ] Performance optimization needed for large image sets
 
-### Missing Features
+### Missing Features - Core PDF Features (HIGH PRIORITY)
+- [ ] **Merge PDF** - Combine multiple PDFs into one
+- [ ] **Import PDF** - Import existing PDF files from device
+- [ ] **Split PDF** - Extract pages from PDFs
+- [ ] **PDF Compression** - Reduce PDF file size
+- [ ] **PDF to Word** - Convert PDF to Word document
+
+### Missing Features - Organization & Management
 - [x] File import from gallery ✅
 - [x] Search functionality ✅
 - [x] Sorting functionality ✅
+- [x] Move documents between folders ✅
+- [x] Search within folder page ✅
+- [x] Folder options menu ✅
 - [ ] Filtering (date range)
 - [ ] Tags system
 - [ ] Batch operations
-- [ ] Search within folder page
-- [ ] Folder options menu
+- [ ] Recent documents
 
 ---
 
@@ -79,15 +88,23 @@
 |---------|--------|----------|-------------------|
 | Document Scanning | ✅ 100% | High | - |
 | Folder Management | ✅ 100% | High | - |
-| PDF Conversion | ✅ 100% | High | - |
+| PDF Conversion (Image to PDF) | ✅ 100% | High | - |
 | Image Saving | ✅ 100% | High | - |
 | File Import | ✅ 100% | High | - |
 | Search | ✅ 100% | High | - |
 | Sorting | ✅ 100% | Medium | - |
-| Filtering | ❌ 0% | Medium | 1-2 days |
 | Document Viewer | ✅ 100% | High | - |
 | Document Operations | ✅ 100% | High | - |
 | Document Sharing | ✅ 100% | High | - |
+| Move Documents | ✅ 100% | High | - |
+| **Merge PDF** | ❌ 0% | **HIGH** | 2-3 days |
+| **Import PDF** | ❌ 0% | **HIGH** | 1 day |
+| **Split PDF** | ❌ 0% | **HIGH** | 1-2 days |
+| **PDF Compression** | ❌ 0% | **HIGH** | 1-2 days |
+| **PDF to Word** | ❌ 0% | **HIGH** | 2-3 days |
+| Filtering | ❌ 0% | Medium | 1-2 days |
+| Batch Operations | ❌ 0% | Medium | 2-3 days |
+| Recent Documents | ❌ 0% | Medium | 1 day |
 | Tags System | ❌ 0% | Medium | 3-4 days |
 | OCR | ❌ 0% | Low | 1-2 weeks |
 | Cloud Storage | ❌ 0% | Low | 2-3 weeks |
@@ -95,28 +112,49 @@
 
 ---
 
-## 🎯 Immediate Next Steps
+## 🎯 Immediate Next Steps - Core PDF Features
 
-### This Week
-1. **File Import** (2-3 days)
-   - Add image_picker package
-   - Implement gallery selection
-   - Save to folders
+### Priority 1: PDF Services (Make it the BEST Document App)
+1. **Merge PDF** (2-3 days) ⭐⭐⭐
+   - Select multiple PDFs from folders
+   - Merge order customization
+   - Save merged PDF
+   - Connect to existing "Merge PDF" button
 
-2. **Search** (2-3 days)
-   - Add search bar
-   - Implement folder name search
-   - Add search results UI
+2. **Import PDF** (1 day) ⭐⭐⭐
+   - File picker integration
+   - Import PDFs to folders
+   - PDF preview
+   - Connect to existing "Import PDF" button
 
-3. **Polish** (1-2 days)
-   - Fix any remaining bugs
-   - Improve error messages
-   - Add loading indicators
+3. **Split PDF** (1-2 days) ⭐⭐
+   - Extract pages from PDFs
+   - Page range selection
+   - Save split PDFs
 
-### Next Week
-1. **Sorting & Filtering** (2-3 days)
-2. **Tags System** (3-4 days)
-3. **Batch Operations** (2-3 days)
+4. **PDF Compression** (1-2 days) ⭐⭐
+   - Compress PDF files
+   - Quality settings
+   - Connect to existing "File Compress" button
+
+5. **PDF to Word** (2-3 days) ⭐⭐
+   - PDF text extraction
+   - Word document generation
+   - Format preservation
+   - Connect to existing "PDF to Word" button
+
+### Priority 2: Organization Features
+1. **Batch Operations** (2-3 days)
+   - Multi-select documents
+   - Batch delete, move, convert
+
+2. **Recent Documents** (1 day)
+   - Track recently accessed
+   - Quick access widget
+
+3. **Filtering** (1-2 days)
+   - Date range filters
+   - Quick filters (Today, This Week, This Month)
 
 ---
 
@@ -151,22 +189,28 @@
 
 ## 💡 Feature Requests (From Analysis)
 
-### High Priority
+### High Priority - Core PDF Features
+1. **Merge PDF** - Combine multiple PDFs
+2. **Import PDF** - Import existing PDF files
+3. **Split PDF** - Extract pages from PDFs
+4. **PDF Compression** - Reduce file size
+5. **PDF to Word** - Convert PDF to Word format
+
+### High Priority - Document Management
 1. ✅ File import from gallery
 2. ✅ Search functionality
 3. ✅ Document renaming
 4. ✅ Document deletion
 5. ✅ Document sharing
 6. ✅ Document viewer with zoom
-7. Move documents between folders
-8. Search within folder page
+7. ✅ Move documents between folders
+8. ✅ Search within folder page
 
 ### Medium Priority
-1. Tags system
-2. Sorting options
+1. Batch operations
+2. Recent documents
 3. Filtering options
-4. Batch operations
-5. Recent documents
+4. Tags system
 
 ### Low Priority
 1. OCR functionality

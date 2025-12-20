@@ -51,12 +51,7 @@ class _HomepageState extends State<Homepage> {
   void _handleServiceTap(BuildContext context, int index) {
     switch (index) {
       case 0: // PDF to Word
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('PDF to Word conversion coming soon'),
-            duration: Duration(seconds: 2),
-          ),
-        );
+        pdfService.showPdfToWordDialog(context);
         break;
       case 1: // Merge PDF
         pdfService.showMergePdfDialog(context);

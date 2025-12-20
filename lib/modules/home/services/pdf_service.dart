@@ -1,5 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
+import 'dart:convert';
+import 'package:archive/archive.dart';
 
 import 'package:document_companion/local_database/handler/image_database_handler.dart';
 import 'package:document_companion/local_database/models/current_image.dart';
@@ -15,6 +17,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:syncfusion_flutter_pdf/pdf.dart' as sf;
 import 'package:uuid/uuid.dart';
 
 class PdfService {
@@ -1323,6 +1326,239 @@ class _PageRangeSelectorState extends State<_PageRangeSelector> {
         },
       ),
     );
+  }
+
+  /// Extracts text from PDF using Syncfusion
+  Future<String> extractTextFromPdf(Uint8List pdfBytes) async {
+    try {
+      final document = sf.PdfDocument(inputBytes: pdfBytes);
+      final textExtractor = sf.PdfTextExtractor(document);
+      final extractedText = textExtractor.extractText();
+      document.dispose();
+      return extractedText;
+    } catch (e) {
+      print('Error extracting text from PDF: $e');
+      return '';
+    }
+  }
+
+  /// Creates a basic Word document (.docx) from text
+  /// Note: This creates a simple .docx file structure
+  Future<Uint8List?> createWordDocumentFromText(String text) async {
+    try {
+      // Create a simple .docx file structure
+      // .docx is essentially a ZIP file containing XML files
+      final archive = Archive();
+
+      // Create [Content_Types].xml
+      final contentTypes = '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+<Default Extension="xml" ContentType="application/xml"/>
+<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
+</Types>''';
+
+      // Create word/document.xml with the text content
+      // Escape XML special characters
+      final escapedText = text
+          .replaceAll('&', '&amp;')
+          .replaceAll('<', '&lt;')
+          .replaceAll('>', '&gt;')
+          .replaceAll('"', '&quot;')
+          .replaceAll("'", '&apos;');
+
+      final documentXml = '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+<w:body>
+<w:p>
+<w:r>
+<w:t>$escapedText</w:t>
+</w:r>
+</w:p>
+</w:body>
+</w:document>''';
+
+      // Create _rels/.rels
+      final rels = '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
+</Relationships>''';
+
+      // Create word/_rels/document.xml.rels
+      final wordRels = '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+</Relationships>''';
+
+      // Add files to archive
+      archive.addFile(ArchiveFile('[Content_Types].xml', contentTypes.length, utf8.encode(contentTypes)));
+      archive.addFile(ArchiveFile('word/document.xml', documentXml.length, utf8.encode(documentXml)));
+      archive.addFile(ArchiveFile('_rels/.rels', rels.length, utf8.encode(rels)));
+      archive.addFile(ArchiveFile('word/_rels/document.xml.rels', wordRels.length, utf8.encode(wordRels)));
+
+      // Create ZIP file
+      final zipEncoder = ZipEncoder();
+      final zipData = zipEncoder.encode(archive);
+      
+      return zipData != null ? Uint8List.fromList(zipData) : null;
+    } catch (e) {
+      print('Error creating Word document: $e');
+      return null;
+    }
+  }
+
+  /// Converts PDF to Word document
+  Future<Uint8List?> convertPdfToWord(Uint8List pdfBytes) async {
+    try {
+      // Extract text from PDF
+      final extractedText = await extractTextFromPdf(pdfBytes);
+      
+      if (extractedText.isEmpty) {
+        throw Exception('No text could be extracted from PDF. The PDF might be image-based or scanned.');
+      }
+
+      // Create Word document from extracted text
+      final wordBytes = await createWordDocumentFromText(extractedText);
+      return wordBytes;
+    } catch (e) {
+      print('Error converting PDF to Word: $e');
+      rethrow;
+    }
+  }
+
+  /// Shows PDF to Word conversion dialog
+  Future<void> showPdfToWordDialog(BuildContext context) async {
+    try {
+      // Show file picker to select PDF
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf'],
+        allowMultiple: false,
+      );
+
+      if (result == null || result.files.isEmpty) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('No PDF selected'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+        return;
+      }
+
+      final platformFile = result.files.first;
+      File? pdfFile;
+
+      if (platformFile.path != null) {
+        pdfFile = File(platformFile.path!);
+      } else if (platformFile.bytes != null) {
+        final directory = await getTemporaryDirectory();
+        pdfFile = File('${directory.path}/${platformFile.name}');
+        await pdfFile.writeAsBytes(platformFile.bytes!);
+      }
+
+      if (pdfFile == null) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Error reading PDF file'),
+              backgroundColor: Colors.red,
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+        return;
+      }
+
+      final pdfBytes = await pdfFile.readAsBytes();
+      final pdfFileName = platformFile.name.replaceAll('.pdf', '');
+
+      if (!context.mounted) return;
+
+      // Show loading dialog
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+
+      try {
+        // Convert PDF to Word
+        final wordBytes = await convertPdfToWord(pdfBytes);
+
+        if (!context.mounted) return;
+        Navigator.pop(context); // Close loading
+
+        if (wordBytes != null) {
+          // Save Word document
+          final directory = await getApplicationDocumentsDirectory();
+          final wordFile = File('${directory.path}/${pdfFileName}.docx');
+          await wordFile.writeAsBytes(wordBytes);
+
+          // Show success dialog
+          await showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('PDF Converted to Word'),
+              content: Text('Word document saved as "${pdfFileName}.docx"'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Close'),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    Navigator.pop(context);
+                    // Share the Word document
+                    await Share.shareXFiles(
+                      [XFile(wordFile.path)],
+                      subject: pdfFileName,
+                    );
+                  },
+                  child: const Text('Share'),
+                ),
+              ],
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Error converting PDF to Word'),
+              backgroundColor: Colors.red,
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
+      } catch (e) {
+        if (!context.mounted) return;
+        if (Navigator.canPop(context)) {
+          Navigator.pop(context);
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        if (Navigator.canPop(context)) {
+          Navigator.pop(context);
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
   }
 }
 

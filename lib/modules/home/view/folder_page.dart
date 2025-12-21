@@ -12,7 +12,9 @@ import 'package:document_companion/modules/home/services/folder_service.dart';
 import 'package:document_companion/modules/home/services/tag_service.dart';
 import 'package:document_companion/modules/home/view/document_viewer_page.dart';
 import 'package:document_companion/modules/home/view/filter_bottom_sheet.dart';
+import 'package:document_companion/modules/home/widgets/cached_image_widget.dart';
 import 'package:document_companion/modules/scan/view/scan.dart';
+import 'package:document_companion/utils/ux_helpers.dart';
 import 'package:flutter/material.dart';
 
 import '../models/folder_view_model.dart';
@@ -34,6 +36,7 @@ class _FolderPageState extends State<FolderPage> {
   final TextEditingController _searchController = TextEditingController();
   StreamSubscription<List<ImageModel>>? _imageSubscription;
   int _imageCount = 0;
+  bool _hasActiveFilter = false;
 
   @override
   void initState() {
@@ -41,6 +44,7 @@ class _FolderPageState extends State<FolderPage> {
     _loadImages();
     _updateImageCount();
     tagBloc.fetchTags();
+    _hasActiveFilter = imageBloc.currentDateFilter.isActive;
   }
 
   @override
@@ -51,6 +55,7 @@ class _FolderPageState extends State<FolderPage> {
   }
 
   void _toggleSearch() {
+    UXHelpers.selectionFeedback();
     setState(() {
       _isSearching = !_isSearching;
       if (!_isSearching) {
@@ -65,6 +70,7 @@ class _FolderPageState extends State<FolderPage> {
   }
 
   void _toggleSelectionMode() {
+    UXHelpers.mediumImpact();
     setState(() {
       _isSelectionMode = !_isSelectionMode;
       if (!_isSelectionMode) {
@@ -74,6 +80,7 @@ class _FolderPageState extends State<FolderPage> {
   }
 
   void _toggleImageSelection(String imageId) {
+    UXHelpers.selectionFeedback();
     setState(() {
       if (_selectedImageIds.contains(imageId)) {
         _selectedImageIds.remove(imageId);
@@ -87,6 +94,7 @@ class _FolderPageState extends State<FolderPage> {
   }
 
   void _selectAllImages(List<ImageModel> images) {
+    UXHelpers.mediumImpact();
     setState(() {
       _selectedImageIds.clear();
       _selectedImageIds.addAll(images.map((img) => img.id));
@@ -94,6 +102,7 @@ class _FolderPageState extends State<FolderPage> {
   }
 
   void _deselectAll() {
+    UXHelpers.selectionFeedback();
     setState(() {
       _selectedImageIds.clear();
       _isSelectionMode = false;
@@ -230,95 +239,199 @@ class _FolderPageState extends State<FolderPage> {
               ),
         actions: [
           if (_isSelectionMode) ...[
-            Text('${_selectedImageIds.length} selected'),
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Text(
+                  '${_selectedImageIds.length} selected',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+                ),
+              ),
+            ),
             IconButton(
               onPressed: _deselectAll,
               icon: const Icon(Icons.close_rounded),
               tooltip: 'Cancel',
             ),
-          ] else if (!_isSearching) ...[
-            IconButton(
-              onPressed: () {
-                setState(() {
-                  _isGridView = !_isGridView;
-                });
-              },
-              icon: Icon(
-                _isGridView ? Icons.view_list_rounded : Icons.grid_view_rounded,
+          ] else ...[
+            if (_isSearching)
+              IconButton(
+                onPressed: _toggleSearch,
+                icon: const Icon(Icons.close_rounded),
+                tooltip: 'Close search',
+              )
+            else
+              PopupMenuButton<String>(
+                icon: const Icon(Icons.more_vert_rounded),
+                tooltip: 'More options',
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                onSelected: (value) {
+                  switch (value) {
+                    case 'grid_view':
+                      setState(() {
+                        _isGridView = true;
+                      });
+                      break;
+                    case 'list_view':
+                      setState(() {
+                        _isGridView = false;
+                      });
+                      break;
+                    case 'search':
+                      _toggleSearch();
+                      break;
+                    case 'filter':
+                      showModalBottomSheet(
+                        context: context,
+                        backgroundColor: Colors.transparent,
+                        builder: (context) => const FilterBottomSheet(),
+                      ).then((_) {
+                        // Update filter state after bottom sheet closes
+                        setState(() {
+                          _hasActiveFilter =
+                              imageBloc.currentDateFilter.isActive;
+                        });
+                      });
+                      break;
+                    case 'select':
+                      _toggleSelectionMode();
+                      break;
+                    case 'rename':
+                      folderService.showRenameDialog(context, widget.folder);
+                      break;
+                    case 'tags':
+                      tagService.showAddTagToFolderDialog(
+                        context,
+                        widget.folder.id,
+                      );
+                      break;
+                    case 'delete':
+                      folderService.showDeleteConfirmation(
+                        context,
+                        widget.folder,
+                      );
+                      break;
+                  }
+                },
+                itemBuilder: (context) => [
+                  // View Options
+                  PopupMenuItem(
+                    value: _isGridView ? 'list_view' : 'grid_view',
+                    child: Row(
+                      children: [
+                        Icon(
+                          _isGridView
+                              ? Icons.view_list_rounded
+                              : Icons.grid_view_rounded,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 12),
+                        Text(_isGridView ? 'List View' : 'Grid View'),
+                      ],
+                    ),
+                  ),
+                  const PopupMenuDivider(),
+                  // Search
+                  const PopupMenuItem(
+                    value: 'search',
+                    child: Row(
+                      children: [
+                        Icon(Icons.search_rounded, size: 20),
+                        SizedBox(width: 12),
+                        Text('Search'),
+                      ],
+                    ),
+                  ),
+                  // Filter
+                  PopupMenuItem(
+                    value: 'filter',
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.filter_list_rounded,
+                          size: 20,
+                          color: _hasActiveFilter ? CustomColors.primary : null,
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          'Filter',
+                          style: TextStyle(
+                            color: _hasActiveFilter
+                                ? CustomColors.primary
+                                : null,
+                            fontWeight: _hasActiveFilter
+                                ? FontWeight.w500
+                                : null,
+                          ),
+                        ),
+                        if (_hasActiveFilter) ...[
+                          const Spacer(),
+                          Container(
+                            width: 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              color: CustomColors.primary,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  // Select Mode
+                  const PopupMenuItem(
+                    value: 'select',
+                    child: Row(
+                      children: [
+                        Icon(Icons.checklist_rounded, size: 20),
+                        SizedBox(width: 12),
+                        Text('Select Documents'),
+                      ],
+                    ),
+                  ),
+                  const PopupMenuDivider(),
+                  // Folder Actions
+                  const PopupMenuItem(
+                    value: 'rename',
+                    child: Row(
+                      children: [
+                        Icon(Icons.edit_rounded, size: 20),
+                        SizedBox(width: 12),
+                        Text('Rename Folder'),
+                      ],
+                    ),
+                  ),
+                  const PopupMenuItem(
+                    value: 'tags',
+                    child: Row(
+                      children: [
+                        Icon(Icons.label_rounded, size: 20),
+                        SizedBox(width: 12),
+                        Text('Manage Tags'),
+                      ],
+                    ),
+                  ),
+                  const PopupMenuDivider(),
+                  // Delete
+                  const PopupMenuItem(
+                    value: 'delete',
+                    child: Row(
+                      children: [
+                        Icon(Icons.delete_rounded, color: Colors.red, size: 20),
+                        SizedBox(width: 12),
+                        Text(
+                          'Delete Folder',
+                          style: TextStyle(color: Colors.red),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-              tooltip: _isGridView ? 'List view' : 'Grid view',
-            ),
-            IconButton(
-              onPressed: _toggleSearch,
-              icon: const Icon(Icons.search_rounded),
-              tooltip: 'Search',
-            ),
-            StreamBuilder<DateFilter>(
-              stream: Stream.value(imageBloc.currentDateFilter),
-              builder: (context, snapshot) {
-                final hasActiveFilter = snapshot.data?.isActive ?? false;
-                return IconButton(
-                  onPressed: () {
-                    showModalBottomSheet(
-                      context: context,
-                      backgroundColor: Colors.transparent,
-                      builder: (context) => const FilterBottomSheet(),
-                    );
-                  },
-                  icon: Icon(
-                    Icons.filter_list_rounded,
-                    color: hasActiveFilter ? Colors.blue : null,
-                  ),
-                  tooltip: 'Filter',
-                );
-              },
-            ),
-            IconButton(
-              onPressed: _toggleSelectionMode,
-              icon: const Icon(Icons.checklist_rounded),
-              tooltip: 'Select',
-            ),
-            PopupMenuButton<String>(
-              icon: const Icon(Icons.more_vert_rounded),
-              tooltip: 'More options',
-              onSelected: (value) {
-                if (value == 'rename') {
-                  folderService.showRenameDialog(context, widget.folder);
-                } else if (value == 'tags') {
-                  tagService.showAddTagToFolderDialog(
-                    context,
-                    widget.folder.id,
-                  );
-                } else if (value == 'delete') {
-                  folderService.showDeleteConfirmation(context, widget.folder);
-                }
-              },
-              itemBuilder: (context) => [
-                const PopupMenuItem(
-                  value: 'rename',
-                  child: Row(
-                    children: [
-                      Icon(Icons.edit_rounded, size: 20),
-                      SizedBox(width: 12),
-                      Text('Rename Folder'),
-                    ],
-                  ),
-                ),
-                const PopupMenuItem(
-                  value: 'delete',
-                  child: Row(
-                    children: [
-                      Icon(Icons.delete_rounded, color: Colors.red, size: 20),
-                      SizedBox(width: 12),
-                      Text(
-                        'Delete Folder',
-                        style: TextStyle(color: Colors.red),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
           ],
         ],
       ),
@@ -428,6 +541,12 @@ class _ImageGridView extends StatelessWidget {
           mainAxisSpacing: 16,
         ),
         itemCount: images.length,
+        // Lazy loading optimization
+        cacheExtent: 500, // Cache 500 pixels worth of items
+        addAutomaticKeepAlives:
+            false, // Don't keep widgets alive when scrolled away
+        addRepaintBoundaries:
+            true, // Add repaint boundaries for better performance
         itemBuilder: (context, index) {
           return _ImageCard(
             image: images[index],
@@ -451,6 +570,12 @@ class _ImageGridView extends StatelessWidget {
           bottom: isSelectionMode ? 80 : 16,
         ),
         itemCount: images.length,
+        // Lazy loading optimization
+        cacheExtent: 500, // Cache 500 pixels worth of items
+        addAutomaticKeepAlives:
+            false, // Don't keep widgets alive when scrolled away
+        addRepaintBoundaries:
+            true, // Add repaint boundaries for better performance
         itemBuilder: (context, index) {
           return _ImageListTile(
             image: images[index],
@@ -522,12 +647,30 @@ class _ImageCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: Stack(
+                    fit: StackFit.expand,
                     children: [
                       ClipRRect(
                         borderRadius: const BorderRadius.vertical(
                           top: Radius.circular(16),
                         ),
-                        child: Image.memory(image.image, fit: BoxFit.cover),
+                        child: CachedImageWidget(
+                          imageData: image.image,
+                          imageId: image.id,
+                          fit: BoxFit.cover,
+                          placeholder: Container(
+                            color: Colors.grey[200],
+                            child: const Center(
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          ),
+                          errorWidget: Container(
+                            color: Colors.grey[200],
+                            child: const Icon(
+                              Icons.image_not_supported,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ),
                       ),
                       if (isSelectionMode)
                         Positioned.fill(
@@ -664,11 +807,34 @@ class _ImageListTile extends StatelessWidget {
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
-              child: Image.memory(
-                image.image,
+              child: CachedImageWidget(
+                imageData: image.image,
+                imageId: image.id,
                 width: 60,
                 height: 60,
                 fit: BoxFit.cover,
+                placeholder: Container(
+                  width: 60,
+                  height: 60,
+                  color: Colors.grey[200],
+                  child: const Center(
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  ),
+                ),
+                errorWidget: Container(
+                  width: 60,
+                  height: 60,
+                  color: Colors.grey[200],
+                  child: const Icon(
+                    Icons.image_not_supported,
+                    color: Colors.grey,
+                    size: 24,
+                  ),
+                ),
               ),
             ),
             if (isSelectionMode)

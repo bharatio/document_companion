@@ -18,7 +18,7 @@ class LocalDatabaseHandler {
     String path = join(documentsDirectory.path, "test.db");
     var theDb = await openDatabase(
       path,
-      version: 4,
+      version: 5, // Increment version for indexes
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -55,6 +55,39 @@ class LocalDatabaseHandler {
     await db.execute(
       "CREATE TABLE Document_Tags(document_id TEXT, tag_id TEXT, PRIMARY KEY (document_id, tag_id), FOREIGN KEY (document_id) REFERENCES Images(id) ON DELETE CASCADE, FOREIGN KEY (tag_id) REFERENCES Tags(id) ON DELETE CASCADE)",
     );
+
+    // Create indexes for better query performance
+    await db.execute("CREATE INDEX idx_images_folder_id ON Images(folder_id)");
+    await db.execute(
+      "CREATE INDEX idx_images_created_on ON Images(created_on)",
+    );
+    await db.execute(
+      "CREATE INDEX idx_images_modified_on ON Images(modified_on)",
+    );
+    await db.execute(
+      "CREATE INDEX idx_folders_created_on ON Folders(created_on)",
+    );
+    await db.execute(
+      "CREATE INDEX idx_folders_modified_on ON Folders(modified_on)",
+    );
+    await db.execute(
+      "CREATE INDEX idx_recent_documents_accessed_on ON RecentDocuments(accessed_on)",
+    );
+    await db.execute(
+      "CREATE INDEX idx_recent_documents_document_id ON RecentDocuments(document_id)",
+    );
+    await db.execute(
+      "CREATE INDEX idx_folder_tags_folder_id ON Folder_Tags(folder_id)",
+    );
+    await db.execute(
+      "CREATE INDEX idx_folder_tags_tag_id ON Folder_Tags(tag_id)",
+    );
+    await db.execute(
+      "CREATE INDEX idx_document_tags_document_id ON Document_Tags(document_id)",
+    );
+    await db.execute(
+      "CREATE INDEX idx_document_tags_tag_id ON Document_Tags(tag_id)",
+    );
   }
 
   void _onUpgrade(Database db, int oldVersion, int newVersion) async {
@@ -82,6 +115,41 @@ class LocalDatabaseHandler {
       // Add Document_Tags junction table
       await db.execute(
         "CREATE TABLE IF NOT EXISTS Document_Tags(document_id TEXT, tag_id TEXT, PRIMARY KEY (document_id, tag_id), FOREIGN KEY (document_id) REFERENCES Images(id) ON DELETE CASCADE, FOREIGN KEY (tag_id) REFERENCES Tags(id) ON DELETE CASCADE)",
+      );
+
+      // Create indexes for better query performance
+      await db.execute(
+        "CREATE INDEX IF NOT EXISTS idx_images_folder_id ON Images(folder_id)",
+      );
+      await db.execute(
+        "CREATE INDEX IF NOT EXISTS idx_images_created_on ON Images(created_on)",
+      );
+      await db.execute(
+        "CREATE INDEX IF NOT EXISTS idx_images_modified_on ON Images(modified_on)",
+      );
+      await db.execute(
+        "CREATE INDEX IF NOT EXISTS idx_folders_created_on ON Folders(created_on)",
+      );
+      await db.execute(
+        "CREATE INDEX IF NOT EXISTS idx_folders_modified_on ON Folders(modified_on)",
+      );
+      await db.execute(
+        "CREATE INDEX IF NOT EXISTS idx_recent_documents_accessed_on ON RecentDocuments(accessed_on)",
+      );
+      await db.execute(
+        "CREATE INDEX IF NOT EXISTS idx_recent_documents_document_id ON RecentDocuments(document_id)",
+      );
+      await db.execute(
+        "CREATE INDEX IF NOT EXISTS idx_folder_tags_folder_id ON Folder_Tags(folder_id)",
+      );
+      await db.execute(
+        "CREATE INDEX IF NOT EXISTS idx_folder_tags_tag_id ON Folder_Tags(tag_id)",
+      );
+      await db.execute(
+        "CREATE INDEX IF NOT EXISTS idx_document_tags_document_id ON Document_Tags(document_id)",
+      );
+      await db.execute(
+        "CREATE INDEX IF NOT EXISTS idx_document_tags_tag_id ON Document_Tags(tag_id)",
       );
     }
   }

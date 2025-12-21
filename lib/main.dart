@@ -4,15 +4,24 @@ import 'package:document_companion/config/route_generator.dart';
 import 'package:document_companion/modules/home/view/homepage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import 'config/custom_key.dart';
 import 'config/custom_theme.dart';
 import 'generated/l10n.dart';
+import 'modules/home/services/ad_service.dart';
 
 Future<void> main() async {
   // Ensure that plugin services are initialized so that `availableCameras()`
   // can be called before `runApp()`
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Google Mobile Ads SDK
+  await MobileAds.instance.initialize();
+
+  // Preload ads for better user experience
+  adService.preloadAds();
+
   runApp(MyApp());
 }
 

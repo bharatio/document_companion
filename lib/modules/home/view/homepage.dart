@@ -16,6 +16,7 @@ import 'package:document_companion/modules/home/view/create_bottom_modal_sheet.d
 import 'package:document_companion/modules/home/view/document_viewer_page.dart';
 import 'package:document_companion/modules/home/view/filter_dialog.dart';
 import 'package:document_companion/modules/home/view/images_preview.dart';
+import 'package:document_companion/modules/home/widgets/banner_ad_widget.dart';
 import 'package:document_companion/modules/settings/view/settings_page.dart';
 import 'package:document_companion/utils/constants/constants.dart';
 import 'package:document_companion/utils/ux_helpers.dart';
@@ -533,31 +534,43 @@ class _HomepageState extends State<Homepage> {
                                 if (snapshot.hasData) {
                                   final folders = snapshot.data;
                                   if (folders?.isEmpty ?? true) {
-                                    return _EmptyState();
+                                    return Column(
+                                      children: [
+                                        Expanded(child: _EmptyState()),
+                                        BannerAdWidget(),
+                                      ],
+                                    );
                                   }
-                                  return GridView.builder(
-                                    padding: const EdgeInsets.all(20),
-                                    gridDelegate:
-                                        const SliverGridDelegateWithFixedCrossAxisCount(
-                                          crossAxisCount: 2,
-                                          childAspectRatio: 0.85,
-                                          crossAxisSpacing: 16,
-                                          mainAxisSpacing: 16,
+                                  return Column(
+                                    children: [
+                                      Expanded(
+                                        child: GridView.builder(
+                                          padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+                                          gridDelegate:
+                                              const SliverGridDelegateWithFixedCrossAxisCount(
+                                                crossAxisCount: 2,
+                                                childAspectRatio: 0.85,
+                                                crossAxisSpacing: 16,
+                                                mainAxisSpacing: 16,
+                                              ),
+                                          itemCount: folders?.length ?? 0,
+                                          itemBuilder: (context, index) {
+                                            return _FolderCard(
+                                              folder: folders![index],
+                                              onTap: () {
+                                                UXHelpers.selectionFeedback();
+                                                Navigator.pushNamed(
+                                                  context,
+                                                  FolderPage.route,
+                                                  arguments: folders[index],
+                                                );
+                                              },
+                                            );
+                                          },
                                         ),
-                                    itemCount: folders?.length ?? 0,
-                                    itemBuilder: (context, index) {
-                                      return _FolderCard(
-                                        folder: folders![index],
-                                        onTap: () {
-                                          UXHelpers.selectionFeedback();
-                                          Navigator.pushNamed(
-                                            context,
-                                            FolderPage.route,
-                                            arguments: folders[index],
-                                          );
-                                        },
-                                      );
-                                    },
+                                      ),
+                                      BannerAdWidget(),
+                                    ],
                                   );
                                 }
                                 return const Center(

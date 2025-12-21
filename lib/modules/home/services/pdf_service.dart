@@ -10,6 +10,7 @@ import 'package:document_companion/local_database/models/image_model.dart';
 import 'package:document_companion/modules/home/bloc/folder_bloc.dart';
 import 'package:document_companion/modules/home/bloc/image_bloc.dart';
 import 'package:document_companion/modules/home/models/folder_view_model.dart';
+import 'package:document_companion/modules/home/services/ad_service.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -132,7 +133,10 @@ class PdfService {
           ),
         ],
       ),
-    );
+    ).then((_) {
+      // Show interstitial ad after dialog closes
+      adService.showInterstitialAdIfReady();
+    });
   }
 
   /// Merges multiple PDFs into a single PDF
@@ -560,6 +564,11 @@ class PdfService {
                                   duration: const Duration(seconds: 2),
                                 ),
                               );
+                              
+                              // Show interstitial ad after successful import
+                              Future.delayed(const Duration(seconds: 2), () {
+                                adService.showInterstitialAdIfReady();
+                              });
                             } catch (e) {
                               if (!context.mounted) return;
 
@@ -882,7 +891,10 @@ class PdfService {
           ),
         ],
       ),
-    );
+    ).then((_) {
+      // Show interstitial ad after dialog closes
+      adService.showInterstitialAdIfReady();
+    });
   }
 
   /// Compresses a PDF by re-rendering at lower DPI
@@ -1412,7 +1424,10 @@ class PdfService {
                 ),
               ],
             ),
-          );
+          ).then((_) {
+            // Show interstitial ad after dialog closes
+            adService.showInterstitialAdIfReady();
+          });
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(

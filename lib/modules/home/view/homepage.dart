@@ -16,8 +16,11 @@ import 'package:document_companion/modules/home/view/create_bottom_modal_sheet.d
 import 'package:document_companion/modules/home/view/document_viewer_page.dart';
 import 'package:document_companion/modules/home/view/filter_dialog.dart';
 import 'package:document_companion/modules/home/view/images_preview.dart';
+import 'package:document_companion/modules/settings/view/settings_page.dart';
 import 'package:document_companion/utils/constants/constants.dart';
+import 'package:document_companion/utils/ux_helpers.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'folder_page.dart';
 
@@ -32,12 +35,14 @@ class Homepage extends StatefulWidget {
 class _HomepageState extends State<Homepage> {
   final TextEditingController _searchController = TextEditingController();
   bool _isSearching = false;
+  bool _hasActiveFilters = false;
 
   @override
   void initState() {
     folderBloc.fetchFolders();
     recentDocumentsBloc.fetchRecentDocuments(limit: 5);
     tagBloc.fetchTags();
+    _hasActiveFilters = folderBloc.hasActiveFilters;
     super.initState();
   }
 
@@ -62,6 +67,7 @@ class _HomepageState extends State<Homepage> {
   }
 
   void _handleServiceTap(BuildContext context, int index) {
+    UXHelpers.selectionFeedback();
     switch (index) {
       case 0: // PDF to Word
         pdfService.showPdfToWordDialog(context);
@@ -104,10 +110,29 @@ class _HomepageState extends State<Homepage> {
     }
   }
 
+  Future<void> _refreshFolders() async {
+    UXHelpers.lightImpact();
+    await folderBloc.fetchFolders();
+    await recentDocumentsBloc.fetchRecentDocuments(limit: 5);
+    tagBloc.fetchTags();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (!didPop) {
+          final shouldExit = await UXHelpers.showExitConfirmationDialog(context);
+          if (shouldExit && context.mounted) {
+            Navigator.of(context).pop();
+            // Exit the app
+            SystemNavigator.pop();
+          }
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
         automaticallyImplyLeading: false,
         title: _isSearching
             ? TextField(
@@ -159,31 +184,102 @@ class _HomepageState extends State<Homepage> {
                 ],
               ),
         actions: [
-          if (!_isSearching) ...[
+          if (_isSearching)
             IconButton(
-              onPressed: _toggleSearch,
-              icon: const Icon(Icons.search_rounded),
-              tooltip: 'Search',
-            ),
+              onPressed: () {
+                UXHelpers.selectionFeedback();
+                _toggleSearch();
+              },
+              icon: const Icon(Icons.close_rounded),
+              tooltip: 'Close search',
+            )
+          else
             PopupMenuButton<String>(
               icon: const Icon(Icons.more_vert_rounded),
               tooltip: 'More options',
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               onSelected: (value) {
-                if (value == 'theme') {
-                  final theme = CustomTheme();
-                  theme.toggleTheme();
-                } else if (value == 'settings') {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Settings coming soon'),
-                      duration: Duration(seconds: 2),
-                    ),
-                  );
-                } else if (value == 'tags') {
-                  tagService.showTagManagementDialog(context);
+                UXHelpers.selectionFeedback();
+                switch (value) {
+                  case 'search':
+                    _toggleSearch();
+                    break;
+                  case 'sort':
+                    // Sort menu will be handled by the sort popup in folders section
+                    break;
+                  case 'filter':
+                    showDialog(
+                      context: context,
+                      builder: (context) => const FilterDialog(),
+                    ).then((_) {
+                      if (context.mounted) {
+                        setState(() {
+                          _hasActiveFilters = folderBloc.hasActiveFilters;
+                        });
+                      }
+                    });
+                    break;
+                  case 'theme':
+                    final theme = CustomTheme();
+                    theme.toggleTheme();
+                    UXHelpers.successFeedback();
+                    break;
+                  case 'tags':
+                    tagService.showTagManagementDialog(context);
+                    break;
+                  case 'settings':
+                    Navigator.pushNamed(context, SettingsPage.route);
+                    break;
                 }
               },
               itemBuilder: (context) => [
+                // Search
+                const PopupMenuItem(
+                  value: 'search',
+                  child: Row(
+                    children: [
+                      Icon(Icons.search_rounded, size: 20),
+                      SizedBox(width: 12),
+                      Text('Search Folders'),
+                    ],
+                  ),
+                ),
+                // Filter
+                PopupMenuItem(
+                  value: 'filter',
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.filter_list_rounded,
+                        size: 20,
+                        color: _hasActiveFilters ? CustomColors.primary : null,
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        'Filter',
+                        style: TextStyle(
+                          color: _hasActiveFilters ? CustomColors.primary : null,
+                          fontWeight: _hasActiveFilters ? FontWeight.w500 : null,
+                        ),
+                      ),
+                      if (_hasActiveFilters) ...[
+                        const Spacer(),
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: CustomColors.primary,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                const PopupMenuDivider(),
+                // Theme
                 PopupMenuItem(
                   value: 'theme',
                   child: Row(
@@ -201,16 +297,7 @@ class _HomepageState extends State<Homepage> {
                     ],
                   ),
                 ),
-                const PopupMenuItem(
-                  value: 'settings',
-                  child: Row(
-                    children: [
-                      Icon(Icons.settings_rounded, size: 20),
-                      SizedBox(width: 12),
-                      Text('Settings'),
-                    ],
-                  ),
-                ),
+                // Tags
                 const PopupMenuItem(
                   value: 'tags',
                   child: Row(
@@ -221,13 +308,23 @@ class _HomepageState extends State<Homepage> {
                     ],
                   ),
                 ),
+                const PopupMenuItem(
+                  value: 'settings',
+                  child: Row(
+                    children: [
+                      Icon(Icons.settings_rounded, size: 20),
+                      SizedBox(width: 12),
+                      Text('Settings'),
+                    ],
+                  ),
+                ),
               ],
             ),
-          ],
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
+          UXHelpers.mediumImpact();
           showModalBottomSheet(
             context: context,
             isScrollControlled: true,
@@ -298,7 +395,11 @@ class _HomepageState extends State<Homepage> {
                                 icon: const Icon(Icons.sort_rounded),
                                 tooltip: 'Sort',
                                 iconSize: 20,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
                                 onSelected: (value) {
+                                  UXHelpers.selectionFeedback();
                                   final parts = value.split('_');
                                   final sortBy = parts[0];
                                   final ascending = parts[1] == 'asc';
@@ -306,27 +407,59 @@ class _HomepageState extends State<Homepage> {
                                     sortBy,
                                     ascending: ascending,
                                   );
+                                  UXHelpers.successFeedback();
                                 },
                                 itemBuilder: (context) => [
                                   const PopupMenuItem(
                                     value: 'name_asc',
-                                    child: Text('Name (A-Z)'),
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.sort_by_alpha_rounded, size: 20),
+                                        SizedBox(width: 12),
+                                        Text('Name (A-Z)'),
+                                      ],
+                                    ),
                                   ),
                                   const PopupMenuItem(
                                     value: 'name_desc',
-                                    child: Text('Name (Z-A)'),
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.sort_by_alpha_rounded, size: 20),
+                                        SizedBox(width: 12),
+                                        Text('Name (Z-A)'),
+                                      ],
+                                    ),
                                   ),
+                                  const PopupMenuDivider(),
                                   const PopupMenuItem(
                                     value: 'created_desc',
-                                    child: Text('Newest First'),
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.access_time_rounded, size: 20),
+                                        SizedBox(width: 12),
+                                        Text('Newest First'),
+                                      ],
+                                    ),
                                   ),
                                   const PopupMenuItem(
                                     value: 'created_asc',
-                                    child: Text('Oldest First'),
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.access_time_rounded, size: 20),
+                                        SizedBox(width: 12),
+                                        Text('Oldest First'),
+                                      ],
+                                    ),
                                   ),
                                   const PopupMenuItem(
                                     value: 'modified_desc',
-                                    child: Text('Recently Modified'),
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.update_rounded, size: 20),
+                                        SizedBox(width: 12),
+                                        Text('Recently Modified'),
+                                      ],
+                                    ),
                                   ),
                                 ],
                               ),
@@ -341,13 +474,16 @@ class _HomepageState extends State<Homepage> {
                                         children: [
                                           IconButton(
                                             onPressed: () async {
+                                              UXHelpers.selectionFeedback();
                                               await showDialog(
                                                 context: context,
                                                 builder: (context) => const FilterDialog(),
                                               );
                                               // Refresh the UI after dialog closes
                                               if (context.mounted) {
-                                                setState(() {});
+                                                setState(() {
+                                                  _hasActiveFilters = folderBloc.hasActiveFilters;
+                                                });
                                               }
                                             },
                                             icon: Icon(
@@ -384,46 +520,51 @@ class _HomepageState extends State<Homepage> {
                       ),
                     ),
                     Expanded(
-                      child: StreamBuilder<List<FolderViewModel>>(
-                        stream: folderBloc.folderList,
-                        builder:
-                            (
-                              context,
-                              AsyncSnapshot<List<FolderViewModel>> snapshot,
-                            ) {
-                              if (snapshot.hasData) {
-                                final folders = snapshot.data;
-                                if (folders?.isEmpty ?? true) {
-                                  return _EmptyState();
+                      child: RefreshIndicator(
+                        onRefresh: _refreshFolders,
+                        color: CustomColors.primary,
+                        child: StreamBuilder<List<FolderViewModel>>(
+                          stream: folderBloc.folderList,
+                          builder:
+                              (
+                                context,
+                                AsyncSnapshot<List<FolderViewModel>> snapshot,
+                              ) {
+                                if (snapshot.hasData) {
+                                  final folders = snapshot.data;
+                                  if (folders?.isEmpty ?? true) {
+                                    return _EmptyState();
+                                  }
+                                  return GridView.builder(
+                                    padding: const EdgeInsets.all(20),
+                                    gridDelegate:
+                                        const SliverGridDelegateWithFixedCrossAxisCount(
+                                          crossAxisCount: 2,
+                                          childAspectRatio: 0.85,
+                                          crossAxisSpacing: 16,
+                                          mainAxisSpacing: 16,
+                                        ),
+                                    itemCount: folders?.length ?? 0,
+                                    itemBuilder: (context, index) {
+                                      return _FolderCard(
+                                        folder: folders![index],
+                                        onTap: () {
+                                          UXHelpers.selectionFeedback();
+                                          Navigator.pushNamed(
+                                            context,
+                                            FolderPage.route,
+                                            arguments: folders[index],
+                                          );
+                                        },
+                                      );
+                                    },
+                                  );
                                 }
-                                return GridView.builder(
-                                  padding: const EdgeInsets.all(20),
-                                  gridDelegate:
-                                      const SliverGridDelegateWithFixedCrossAxisCount(
-                                        crossAxisCount: 2,
-                                        childAspectRatio: 0.85,
-                                        crossAxisSpacing: 16,
-                                        mainAxisSpacing: 16,
-                                      ),
-                                  itemCount: folders?.length ?? 0,
-                                  itemBuilder: (context, index) {
-                                    return _FolderCard(
-                                      folder: folders![index],
-                                      onTap: () {
-                                        Navigator.pushNamed(
-                                          context,
-                                          FolderPage.route,
-                                          arguments: folders[index],
-                                        );
-                                      },
-                                    );
-                                  },
+                                return const Center(
+                                  child: CircularProgressIndicator(),
                                 );
-                              }
-                              return const Center(
-                                child: CircularProgressIndicator(),
-                              );
-                            },
+                              },
+                        ),
                       ),
                     ),
                   ],
@@ -432,6 +573,7 @@ class _HomepageState extends State<Homepage> {
             ),
           ],
         ),
+      ),
       ),
     );
   }
@@ -621,7 +763,9 @@ class _RecentDocumentsSection extends StatelessWidget {
               ),
               TextButton(
                 onPressed: () {
+                  UXHelpers.selectionFeedback();
                   recentDocumentsBloc.clearRecentDocuments();
+                  UXHelpers.successFeedback();
                 },
                 child: const Text('Clear'),
               ),
@@ -653,10 +797,12 @@ class _RecentDocumentCard extends StatelessWidget {
   const _RecentDocumentCard({required this.recentDocument});
 
   Future<void> _openDocument(BuildContext context) async {
+    UXHelpers.selectionFeedback();
     // Fetch the image from database
     final image = await imageBloc.getImageById(recentDocument.documentId);
     if (image == null) {
       if (context.mounted) {
+        UXHelpers.errorFeedback();
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Document not found'),

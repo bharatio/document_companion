@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import '../modules/home/models/folder_view_model.dart';
 import '../modules/home/view/folder_page.dart';
 import '../modules/scan/view/scan.dart';
+import '../modules/settings/view/settings_page.dart';
 
 class RouteGenerator {
   static Route<MaterialPageRoute> generateRoute(RouteSettings settings) {
@@ -41,6 +42,11 @@ class RouteGenerator {
             initialIndex: args['initialIndex'] as int? ?? 0,
             folderId: args['folderId'] as String,
           ),
+          settings: settings,
+        );
+      case SettingsPage.route:
+        return MaterialPageRoute(
+          builder: (_) => const SettingsPage(),
           settings: settings,
         );
       default:

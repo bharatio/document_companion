@@ -13,8 +13,9 @@ class BottomBarEditPhoto extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (editPhotoDocumentStyle.hideBottomBarDefault)
+    if (editPhotoDocumentStyle.hideBottomBarDefault) {
       return const SizedBox.shrink();
+    }
 
     return Positioned(
       bottom: 0,

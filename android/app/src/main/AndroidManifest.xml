@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
-        android:label="document_companion"
+        android:label="Document Companion"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

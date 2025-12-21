@@ -13,8 +13,9 @@ class AppBarEditPhoto extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (editPhotoDocumentStyle.hideAppBarDefault)
+    if (editPhotoDocumentStyle.hideAppBarDefault) {
       return const SizedBox.shrink();
+    }
 
     return Positioned(
       top: 0,

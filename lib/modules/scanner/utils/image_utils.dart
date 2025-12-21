@@ -1,6 +1,8 @@
 import 'dart:math';
 
 import 'dart:developer' as developer;
+import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:image/image.dart' as img;
 
@@ -219,22 +221,97 @@ class ImageUtils {
     }
   }
 
-  /// Apply the selected [filter] with the opencv library
+  /// Apply the selected [filter] using Dart image processing
+  /// Falls back to Dart implementation if native method is not available
   Future<Uint8List> applyFilter(Uint8List byteData, FilterType filter) async {
     try {
-      final newImage = await _methodChannel.invokeMethod("applyFilter", {
-        "byteData": byteData,
-        "filter": filter.name,
-      });
+      // Try native implementation first
+      try {
+        final newImage = await _methodChannel.invokeMethod("applyFilter", {
+          "byteData": byteData,
+          "filter": filter.name,
+        });
 
-      if (newImage == null) {
-        return byteData;
+        if (newImage != null && newImage.isNotEmpty) {
+          return newImage;
+        }
+      } catch (e) {
+        // Native method not available, fall back to Dart implementation
+        developer.log(
+          'Native applyFilter not available, using Dart implementation',
+        );
       }
 
-      return newImage;
+      // Use compute to run heavy image processing in an isolate
+      return await compute(_applyFilterDartIsolate, {
+        'byteData': byteData,
+        'filter': filter.name,
+      });
     } catch (e) {
       developer.log('Error in applyFilter', error: e);
       return byteData;
     }
   }
+}
+
+/// Top-level function for isolate processing
+/// This function runs in a separate isolate to avoid blocking the main thread
+Uint8List _applyFilterDartIsolate(Map<String, dynamic> params) {
+  final byteData = params['byteData'] as Uint8List;
+  final filterName = params['filter'] as String;
+  
+  try {
+    // Decode the image
+    final image = img.decodeImage(byteData);
+    if (image == null) {
+      return byteData;
+    }
+
+    // Optimize: Limit max dimensions for better performance
+    // Process at max 2048px on the longest side to maintain quality while improving speed
+    const maxDimension = 2048;
+    img.Image imageToProcess = image;
+    
+    if (image.width > maxDimension || image.height > maxDimension) {
+      final scale = maxDimension / max(image.width, image.height);
+      imageToProcess = img.copyResize(
+        image,
+        width: (image.width * scale).round(),
+        height: (image.height * scale).round(),
+        interpolation: img.Interpolation.linear,
+      );
+    }
+
+    img.Image filteredImage;
+
+    // Parse filter type
+    final filter = FilterType.values.firstWhere(
+      (f) => f.name == filterName,
+      orElse: () => FilterType.natural,
+    );
+
+    switch (filter) {
+      case FilterType.natural:
+        // Natural filter: return original image (no changes)
+        filteredImage = imageToProcess;
+        break;
+
+      case FilterType.gray:
+        // Grayscale filter: convert to grayscale
+        filteredImage = img.grayscale(imageToProcess);
+        break;
+
+      case FilterType.eco:
+        // Eco filter: grayscale (eco-friendly, reduces color processing)
+        filteredImage = img.grayscale(imageToProcess);
+        break;
+    }
+
+    // Encode back to JPEG with high quality
+    return Uint8List.fromList(img.encodeJpg(filteredImage, quality: 95));
+  } catch (e) {
+    developer.log('Error in _applyFilterDartIsolate', error: e);
+    return byteData;
+  }
+
 }

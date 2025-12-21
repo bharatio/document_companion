@@ -303,8 +303,12 @@ class PdfService {
     } catch (e) {
       if (context.mounted) {
         // Close loading dialog if still open
-        if (Navigator.canPop(context)) {
-          Navigator.pop(context);
+        try {
+          if (Navigator.canPop(context)) {
+            Navigator.pop(context);
+          }
+        } catch (_) {
+          // Navigator is deactivated, ignore
         }
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -560,8 +564,12 @@ class PdfService {
                               if (!context.mounted) return;
 
                               // Close loading dialog
-                              if (Navigator.canPop(context)) {
-                                Navigator.pop(context);
+                              try {
+                                if (Navigator.canPop(context)) {
+                                  Navigator.pop(context);
+                                }
+                              } catch (_) {
+                                // Navigator is deactivated, ignore
                               }
 
                               ScaffoldMessenger.of(context).showSnackBar(
@@ -721,8 +729,12 @@ class PdfService {
       );
     } catch (e) {
       if (context.mounted) {
-        if (Navigator.canPop(context)) {
-          Navigator.pop(context);
+        try {
+          if (Navigator.canPop(context)) {
+            Navigator.pop(context);
+          }
+        } catch (_) {
+          // Navigator is deactivated, ignore
         }
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -811,8 +823,12 @@ class PdfService {
                           );
                         } catch (e) {
                           if (!context.mounted) return;
-                          if (Navigator.canPop(context)) {
-                            Navigator.pop(context);
+                          try {
+                            if (Navigator.canPop(context)) {
+                              Navigator.pop(context);
+                            }
+                          } catch (_) {
+                            // Navigator is deactivated, ignore
                           }
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
@@ -1154,8 +1170,12 @@ class PdfService {
                           }
                         } catch (e) {
                           if (!context.mounted) return;
-                          if (Navigator.canPop(context)) {
-                            Navigator.pop(context);
+                          try {
+                            if (Navigator.canPop(context)) {
+                              Navigator.pop(context);
+                            }
+                          } catch (_) {
+                            // Navigator is deactivated, ignore
                           }
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
@@ -1404,8 +1424,12 @@ class PdfService {
         }
       } catch (e) {
         if (!context.mounted) return;
-        if (Navigator.canPop(context)) {
-          Navigator.pop(context);
+        try {
+          if (Navigator.canPop(context)) {
+            Navigator.pop(context);
+          }
+        } catch (_) {
+          // Navigator is deactivated, ignore
         }
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -1417,8 +1441,12 @@ class PdfService {
       }
     } catch (e) {
       if (context.mounted) {
-        if (Navigator.canPop(context)) {
-          Navigator.pop(context);
+        try {
+          if (Navigator.canPop(context)) {
+            Navigator.pop(context);
+          }
+        } catch (_) {
+          // Navigator is deactivated, ignore
         }
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -1467,7 +1495,10 @@ class _PageRangeSelectorState extends State<_PageRangeSelector> {
     super.initState();
     // Default: select all pages as one range
     _ranges.add(PageRange(0, widget.pageCount - 1));
-    widget.onRangesChanged(_ranges);
+    // Defer the callback to avoid calling setState during build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      widget.onRangesChanged(_ranges);
+    });
   }
 
   void _addRange() {

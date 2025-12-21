@@ -1,4 +1,5 @@
 import 'package:document_companion/local_database/models/image_model.dart';
+import 'package:document_companion/modules/home/bloc/recent_documents_bloc.dart';
 import 'package:document_companion/modules/home/services/document_service.dart';
 import 'package:flutter/material.dart';
 
@@ -31,6 +32,17 @@ class _DocumentViewerPageState extends State<DocumentViewerPage> {
     super.initState();
     _currentIndex = widget.initialIndex;
     _pageController = PageController(initialPage: widget.initialIndex);
+    // Track document access
+    _trackDocumentAccess();
+  }
+
+  void _trackDocumentAccess() {
+    if (widget.images.isNotEmpty) {
+      recentDocumentsBloc.trackDocumentAccess(
+        widget.images[widget.initialIndex],
+        widget.folderId,
+      );
+    }
   }
 
   @override

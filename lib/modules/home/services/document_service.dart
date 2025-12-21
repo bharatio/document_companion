@@ -3,6 +3,7 @@ import 'package:document_companion/local_database/handler/image_database_handler
 import 'package:document_companion/local_database/models/image_model.dart';
 import 'package:document_companion/modules/home/bloc/folder_bloc.dart';
 import 'package:document_companion/modules/home/bloc/image_bloc.dart';
+import 'package:document_companion/modules/home/bloc/recent_documents_bloc.dart';
 import 'package:document_companion/modules/home/models/folder_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -256,6 +257,10 @@ class DocumentService {
           TextButton(
             onPressed: () async {
               await imageDatabaseHandler.deleteImage(image.id);
+              // Also remove from recent documents
+              await recentDocumentsBloc.deleteRecentDocumentByDocumentId(
+                image.id,
+              );
               await imageBloc.fetchImagesByFolderId(folderId);
 
               if (context.mounted) {

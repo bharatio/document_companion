@@ -1,11 +1,20 @@
+import 'dart:typed_data';
+
 import 'package:document_companion/config/custom_colors.dart';
 import 'package:document_companion/config/custom_theme.dart';
+import 'package:document_companion/local_database/models/recent_document_model.dart';
+import 'package:document_companion/local_database/models/tag_model.dart';
 import 'package:document_companion/modules/home/bloc/current_image_bloc.dart';
 import 'package:document_companion/modules/home/bloc/folder_bloc.dart';
 import 'package:document_companion/modules/home/bloc/image_bloc.dart';
+import 'package:document_companion/modules/home/bloc/recent_documents_bloc.dart';
+import 'package:document_companion/modules/home/bloc/tag_bloc.dart';
+import 'package:document_companion/modules/home/services/tag_service.dart';
 import 'package:document_companion/modules/home/models/folder_view_model.dart';
 import 'package:document_companion/modules/home/services/pdf_service.dart';
 import 'package:document_companion/modules/home/view/create_bottom_modal_sheet.dart';
+import 'package:document_companion/modules/home/view/document_viewer_page.dart';
+import 'package:document_companion/modules/home/view/filter_dialog.dart';
 import 'package:document_companion/modules/home/view/images_preview.dart';
 import 'package:document_companion/utils/constants/constants.dart';
 import 'package:flutter/material.dart';
@@ -27,6 +36,8 @@ class _HomepageState extends State<Homepage> {
   @override
   void initState() {
     folderBloc.fetchFolders();
+    recentDocumentsBloc.fetchRecentDocuments(limit: 5);
+    tagBloc.fetchTags();
     super.initState();
   }
 
@@ -168,6 +179,8 @@ class _HomepageState extends State<Homepage> {
                       duration: Duration(seconds: 2),
                     ),
                   );
+                } else if (value == 'tags') {
+                  tagService.showTagManagementDialog(context);
                 }
               },
               itemBuilder: (context) => [
@@ -195,6 +208,16 @@ class _HomepageState extends State<Homepage> {
                       Icon(Icons.settings_rounded, size: 20),
                       SizedBox(width: 12),
                       Text('Settings'),
+                    ],
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'tags',
+                  child: Row(
+                    children: [
+                      Icon(Icons.label_rounded, size: 20),
+                      SizedBox(width: 12),
+                      Text('Manage Tags'),
                     ],
                   ),
                 ),
@@ -236,6 +259,18 @@ class _HomepageState extends State<Homepage> {
                 ),
                 separatorBuilder: (context, index) => const SizedBox(width: 12),
               ),
+            ),
+            // Recent Documents Section
+            StreamBuilder<List<RecentDocumentModel>>(
+              stream: recentDocumentsBloc.recentDocumentsStream,
+              builder: (context, snapshot) {
+                if (snapshot.hasData && snapshot.data!.isNotEmpty) {
+                  return _RecentDocumentsSection(
+                    recentDocuments: snapshot.data!,
+                  );
+                }
+                return const SizedBox.shrink();
+              },
             ),
             // Folders Section
             Expanded(
@@ -295,20 +330,53 @@ class _HomepageState extends State<Homepage> {
                                   ),
                                 ],
                               ),
-                              IconButton(
-                                onPressed: () {
-                                  // Filter functionality can be added later
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                        'Filter feature coming soon',
-                                      ),
-                                    ),
+                              Builder(
+                                builder: (context) {
+                                  // Check filter status by listening to folder list changes
+                                  return StreamBuilder<List<FolderViewModel>>(
+                                    stream: folderBloc.folderList,
+                                    builder: (context, _) {
+                                      final hasFilters = folderBloc.hasActiveFilters;
+                                      return Stack(
+                                        children: [
+                                          IconButton(
+                                            onPressed: () async {
+                                              await showDialog(
+                                                context: context,
+                                                builder: (context) => const FilterDialog(),
+                                              );
+                                              // Refresh the UI after dialog closes
+                                              if (context.mounted) {
+                                                setState(() {});
+                                              }
+                                            },
+                                            icon: Icon(
+                                              Icons.filter_list_rounded,
+                                              color: hasFilters
+                                                  ? CustomColors.primary
+                                                  : null,
+                                            ),
+                                            tooltip: 'Filter',
+                                            iconSize: 20,
+                                          ),
+                                          if (hasFilters)
+                                            Positioned(
+                                              right: 8,
+                                              top: 8,
+                                              child: Container(
+                                                width: 8,
+                                                height: 8,
+                                                decoration: BoxDecoration(
+                                                  color: CustomColors.primary,
+                                                  shape: BoxShape.circle,
+                                                ),
+                                              ),
+                                            ),
+                                        ],
+                                      );
+                                    },
                                   );
                                 },
-                                icon: const Icon(Icons.filter_list_rounded),
-                                tooltip: 'Filter',
-                                iconSize: 20,
                               ),
                             ],
                           ),
@@ -479,8 +547,214 @@ class _FolderCard extends StatelessWidget {
                   );
                 },
               ),
+              FutureBuilder<List<TagModel>>(
+                future: tagBloc.getTagsByFolderId(folder.id),
+                builder: (context, snapshot) {
+                  if (snapshot.hasData && snapshot.data!.isNotEmpty) {
+                    final tags = snapshot.data!;
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 6),
+                      child: Wrap(
+                        spacing: 4,
+                        runSpacing: 6,
+                        children: tags.take(2).map((tag) {
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 2),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 3,
+                              ),
+                              decoration: BoxDecoration(
+                                color: _parseColor(tag.color).withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                tag.name,
+                                style: TextStyle(
+                                  fontSize: 9,
+                                  color: _parseColor(tag.color),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    );
+                  }
+                  return const SizedBox.shrink();
+                },
+              ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Color _parseColor(String hex) {
+    return Color(int.parse(hex.replaceAll('#', '0xFF')));
+  }
+}
+
+class _RecentDocumentsSection extends StatelessWidget {
+  final List<RecentDocumentModel> recentDocuments;
+
+  const _RecentDocumentsSection({required this.recentDocuments});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Recent Documents',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+              ),
+              TextButton(
+                onPressed: () {
+                  recentDocumentsBloc.clearRecentDocuments();
+                },
+                child: const Text('Clear'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 80,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              itemCount: recentDocuments.length,
+              separatorBuilder: (context, index) => const SizedBox(width: 12),
+              itemBuilder: (context, index) {
+                final recentDoc = recentDocuments[index];
+                return _RecentDocumentCard(recentDocument: recentDoc);
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RecentDocumentCard extends StatelessWidget {
+  final RecentDocumentModel recentDocument;
+
+  const _RecentDocumentCard({required this.recentDocument});
+
+  Future<void> _openDocument(BuildContext context) async {
+    // Fetch the image from database
+    final image = await imageBloc.getImageById(recentDocument.documentId);
+    if (image == null) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Document not found'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return;
+    }
+
+    // Fetch all images in the folder to show in viewer
+    final images = await imageBloc.getImagesByFolderId(recentDocument.folderId);
+    final imageIndex = images.indexWhere((img) => img.id == image.id);
+
+    if (context.mounted) {
+      Navigator.pushNamed(
+        context,
+        DocumentViewerPage.route,
+        arguments: {
+          'images': images,
+          'initialIndex': imageIndex >= 0 ? imageIndex : 0,
+          'folderId': recentDocument.folderId,
+        },
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () => _openDocument(context),
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: 80,
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: Theme.of(context).dividerColor,
+            width: 1,
+          ),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (recentDocument.thumbnail != null)
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.memory(
+                  Uint8List.fromList(recentDocument.thumbnail!),
+                  width: 50,
+                  height: 50,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      width: 50,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        color: CustomColors.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        Icons.description_rounded,
+                        color: CustomColors.primary,
+                        size: 24,
+                      ),
+                    );
+                  },
+                ),
+              )
+            else
+              Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  color: CustomColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  Icons.description_rounded,
+                  color: CustomColors.primary,
+                  size: 24,
+                ),
+              ),
+            const SizedBox(height: 4),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Text(
+                recentDocument.documentName,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      fontSize: 10,
+                    ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ],
         ),
       ),
     );

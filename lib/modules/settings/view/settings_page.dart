@@ -39,7 +39,7 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     final theme = CustomTheme();
-    
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Settings'),
@@ -81,7 +81,7 @@ class _SettingsPageState extends State<SettingsPage> {
             ],
           ),
           const SizedBox(height: 24),
-          
+
           // General Section
           _SettingsSection(
             title: 'General',
@@ -105,7 +105,7 @@ class _SettingsPageState extends State<SettingsPage> {
             ],
           ),
           const SizedBox(height: 24),
-          
+
           // Premium Section
           _SettingsSection(
             title: 'Premium',
@@ -129,7 +129,7 @@ class _SettingsPageState extends State<SettingsPage> {
             ],
           ),
           const SizedBox(height: 24),
-          
+
           // Data Section
           _SettingsSection(
             title: 'Data',
@@ -157,6 +157,30 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
             ],
           ),
+          const SizedBox(height: 24),
+
+          // Vision & Roadmap Section
+          _SettingsSection(
+            title: 'Vision',
+            children: [
+              _SettingsTile(
+                leading: Icon(
+                  Icons.auto_awesome_rounded,
+                  color: CustomColors.primary,
+                ),
+                title: 'Roadmap',
+                subtitle: 'See what\'s coming next',
+                trailing: const Icon(
+                  Icons.chevron_right_rounded,
+                  color: CustomColors.textTertiary,
+                ),
+                onTap: () {
+                  UXHelpers.selectionFeedback();
+                  _showRoadmapDialog(context);
+                },
+              ),
+            ],
+          ),
         ],
       ),
     );
@@ -165,13 +189,11 @@ class _SettingsPageState extends State<SettingsPage> {
   void _showRemoveAdsDialog(BuildContext context) {
     _checkAdStatus();
     final isAdReady = _isAdReady;
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Row(
           children: [
             Icon(Icons.ads_click_rounded, color: CustomColors.primary),
@@ -190,25 +212,49 @@ class _SettingsPageState extends State<SettingsPage> {
             const SizedBox(height: 16),
             Row(
               children: [
-                Icon(Icons.check_circle_outline, size: 20, color: CustomColors.primary),
+                Icon(
+                  Icons.check_circle_outline,
+                  size: 20,
+                  color: CustomColors.primary,
+                ),
                 const SizedBox(width: 8),
-                const Expanded(child: Text('No banner ads', style: TextStyle(fontSize: 13))),
+                const Expanded(
+                  child: Text('No banner ads', style: TextStyle(fontSize: 13)),
+                ),
               ],
             ),
             const SizedBox(height: 8),
             Row(
               children: [
-                Icon(Icons.check_circle_outline, size: 20, color: CustomColors.primary),
+                Icon(
+                  Icons.check_circle_outline,
+                  size: 20,
+                  color: CustomColors.primary,
+                ),
                 const SizedBox(width: 8),
-                const Expanded(child: Text('No interstitial ads', style: TextStyle(fontSize: 13))),
+                const Expanded(
+                  child: Text(
+                    'No interstitial ads',
+                    style: TextStyle(fontSize: 13),
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 8),
             Row(
               children: [
-                Icon(Icons.check_circle_outline, size: 20, color: CustomColors.primary),
+                Icon(
+                  Icons.check_circle_outline,
+                  size: 20,
+                  color: CustomColors.primary,
+                ),
                 const SizedBox(width: 8),
-                const Expanded(child: Text('Ad-free experience', style: TextStyle(fontSize: 13))),
+                const Expanded(
+                  child: Text(
+                    'Ad-free experience',
+                    style: TextStyle(fontSize: 13),
+                  ),
+                ),
               ],
             ),
             if (!isAdReady) ...[
@@ -222,7 +268,11 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.info_outline, size: 16, color: Colors.orange),
+                    const Icon(
+                      Icons.info_outline,
+                      size: 16,
+                      color: Colors.orange,
+                    ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -252,7 +302,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 ? () {
                     UXHelpers.selectionFeedback();
                     Navigator.of(context).pop();
-                    
+
                     // Show rewarded ad
                     final shown = adService.showRewardedAd(
                       onRewarded: () {
@@ -288,11 +338,13 @@ class _SettingsPageState extends State<SettingsPage> {
                         }
                       },
                     );
-                    
+
                     if (!shown && context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text('Ad is loading. Please try again in a moment.'),
+                          content: Text(
+                            'Ad is loading. Please try again in a moment.',
+                          ),
                           duration: Duration(seconds: 2),
                         ),
                       );
@@ -327,13 +379,92 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
+  void _showRoadmapDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Icon(Icons.rocket_launch_rounded, color: CustomColors.primary),
+            const SizedBox(width: 12),
+            const Text('Product Roadmap'),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _RoadmapPhase(
+                phase: 'Phase 1: Core Foundation',
+                status: '✅ Complete',
+                features: [
+                  'Document Scanning',
+                  'Folder Organization',
+                  'PDF Operations',
+                  'File Import',
+                  'Search & Filter',
+                ],
+                isComplete: true,
+              ),
+              const SizedBox(height: 16),
+              _RoadmapPhase(
+                phase: 'Phase 2: Enhancement',
+                status: '🚧 In Progress',
+                features: [
+                  'OCR (Text Recognition)',
+                  'Document Annotations',
+                  'Digital Signatures',
+                  'Basic Image Editing',
+                ],
+                isComplete: false,
+              ),
+              const SizedBox(height: 16),
+              _RoadmapPhase(
+                phase: 'Phase 3: Advanced Features',
+                status: '📅 Coming Soon',
+                features: [
+                  'Local Backup & Export',
+                  'Advanced PDF Editing',
+                  'Receipt Management',
+                  'Business Card Scanner',
+                ],
+                isComplete: false,
+              ),
+              const SizedBox(height: 16),
+              _RoadmapPhase(
+                phase: 'Phase 4: Security & Privacy',
+                status: '📅 Planned',
+                features: [
+                  'App Lock & Encryption',
+                  'Secure Document Storage',
+                  'Password Protection',
+                  'Advanced Security Features',
+                ],
+                isComplete: false,
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              UXHelpers.selectionFeedback();
+              Navigator.of(context).pop();
+            },
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showAboutDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Row(
           children: [
             Container(
@@ -350,9 +481,7 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
             ),
             const SizedBox(width: 12),
-            const Expanded(
-              child: Text('Document Companion'),
-            ),
+            const Expanded(child: Text('Document Companion')),
           ],
         ),
         content: Column(
@@ -360,16 +489,56 @@ class _SettingsPageState extends State<SettingsPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'A powerful document management app for organizing and managing your documents.',
+              'Your complete document solution. Scan, organize, convert, and manage all your documents in one place.',
               style: TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: CustomColors.primary.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: CustomColors.primary.withValues(alpha: 0.2),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.rocket_launch_rounded,
+                        size: 16,
+                        color: CustomColors.primary,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Coming Soon',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: CustomColors.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '• OCR (Text Recognition)\n• Document Annotations\n• Digital Signatures\n• Local Backup & Export\n• Advanced PDF Editing',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: CustomColors.textSecondary,
+                      height: 1.5,
+                    ),
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: 16),
             Text(
               'Version 1.0.0',
-              style: TextStyle(
-                fontSize: 12,
-                color: CustomColors.textSecondary,
-              ),
+              style: TextStyle(fontSize: 12, color: CustomColors.textSecondary),
             ),
           ],
         ),
@@ -391,10 +560,7 @@ class _SettingsSection extends StatelessWidget {
   final String title;
   final List<Widget> children;
 
-  const _SettingsSection({
-    required this.title,
-    required this.children,
-  });
+  const _SettingsSection({required this.title, required this.children});
 
   @override
   Widget build(BuildContext context) {
@@ -406,18 +572,101 @@ class _SettingsSection extends StatelessWidget {
           child: Text(
             title.toUpperCase(),
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: CustomColors.textSecondary,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.5,
-                ),
+              color: CustomColors.textSecondary,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5,
+            ),
           ),
         ),
-        Card(
-          child: Column(
-            children: children,
-          ),
-        ),
+        Card(child: Column(children: children)),
       ],
+    );
+  }
+}
+
+class _RoadmapPhase extends StatelessWidget {
+  final String phase;
+  final String status;
+  final List<String> features;
+  final bool isComplete;
+
+  const _RoadmapPhase({
+    required this.phase,
+    required this.status,
+    required this.features,
+    required this.isComplete,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isComplete
+            ? CustomColors.accent.withValues(alpha: 0.05)
+            : CustomColors.primary.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isComplete
+              ? CustomColors.accent.withValues(alpha: 0.2)
+              : CustomColors.primary.withValues(alpha: 0.2),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  phase,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: isComplete
+                        ? CustomColors.accent
+                        : CustomColors.primary,
+                  ),
+                ),
+              ),
+              Text(
+                status,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: CustomColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          ...features.map(
+            (feature) => Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Row(
+                children: [
+                  Icon(
+                    isComplete ? Icons.check_circle : Icons.circle_outlined,
+                    size: 14,
+                    color: isComplete
+                        ? CustomColors.accent
+                        : CustomColors.textSecondary,
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      feature,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: CustomColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -452,10 +701,7 @@ class _SettingsTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    title,
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
+                  Text(title, style: Theme.of(context).textTheme.titleMedium),
                   if (subtitle != null) ...[
                     const SizedBox(height: 4),
                     Text(
@@ -466,14 +712,10 @@ class _SettingsTile extends StatelessWidget {
                 ],
               ),
             ),
-            if (trailing != null) ...[
-              const SizedBox(width: 12),
-              trailing!,
-            ],
+            if (trailing != null) ...[const SizedBox(width: 12), trailing!],
           ],
         ),
       ),
     );
   }
 }
-

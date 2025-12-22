@@ -124,7 +124,9 @@ class _HomepageState extends State<Homepage> {
       canPop: false,
       onPopInvokedWithResult: (didPop, result) async {
         if (!didPop) {
-          final shouldExit = await UXHelpers.showExitConfirmationDialog(context);
+          final shouldExit = await UXHelpers.showExitConfirmationDialog(
+            context,
+          );
           if (shouldExit && context.mounted) {
             Navigator.of(context).pop();
             // Exit the app
@@ -134,459 +136,495 @@ class _HomepageState extends State<Homepage> {
       },
       child: Scaffold(
         appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: _isSearching
-            ? TextField(
-                controller: _searchController,
-                autofocus: true,
-                decoration: InputDecoration(
-                  hintText: 'Search folders...',
-                  border: InputBorder.none,
-                  suffixIcon: IconButton(
-                    icon: const Icon(Icons.clear_rounded),
-                    onPressed: () {
-                      _searchController.clear();
-                      folderBloc.clearSearch();
-                      _toggleSearch();
-                    },
+          automaticallyImplyLeading: false,
+          title: _isSearching
+              ? TextField(
+                  controller: _searchController,
+                  autofocus: true,
+                  decoration: InputDecoration(
+                    hintText: 'Search folders...',
+                    border: InputBorder.none,
+                    suffixIcon: IconButton(
+                      icon: const Icon(Icons.clear_rounded),
+                      onPressed: () {
+                        _searchController.clear();
+                        folderBloc.clearSearch();
+                        _toggleSearch();
+                      },
+                    ),
                   ),
+                  onChanged: _onSearchChanged,
+                )
+              : Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: CustomColors.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        Icons.folder_rounded,
+                        color: CustomColors.primary,
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Document Companion',
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                        Text(
+                          'Your complete document solution',
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: CustomColors.primary,
+                                fontWeight: FontWeight.w500,
+                              ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-                onChanged: _onSearchChanged,
+          actions: [
+            if (_isSearching)
+              IconButton(
+                onPressed: () {
+                  UXHelpers.selectionFeedback();
+                  _toggleSearch();
+                },
+                icon: const Icon(Icons.close_rounded),
+                tooltip: 'Close search',
               )
-            : Row(
-                children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: CustomColors.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(
-                      Icons.folder_rounded,
-                      color: CustomColors.primary,
-                      size: 24,
+            else
+              PopupMenuButton<String>(
+                icon: const Icon(Icons.more_vert_rounded),
+                tooltip: 'More options',
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                onSelected: (value) {
+                  UXHelpers.selectionFeedback();
+                  switch (value) {
+                    case 'search':
+                      _toggleSearch();
+                      break;
+                    case 'sort':
+                      // Sort menu will be handled by the sort popup in folders section
+                      break;
+                    case 'filter':
+                      showDialog(
+                        context: context,
+                        builder: (context) => const FilterDialog(),
+                      ).then((_) {
+                        if (context.mounted) {
+                          setState(() {
+                            _hasActiveFilters = folderBloc.hasActiveFilters;
+                          });
+                        }
+                      });
+                      break;
+                    case 'theme':
+                      final theme = CustomTheme();
+                      theme.toggleTheme();
+                      UXHelpers.successFeedback();
+                      break;
+                    case 'tags':
+                      tagService.showTagManagementDialog(context);
+                      break;
+                    case 'settings':
+                      Navigator.pushNamed(context, SettingsPage.route);
+                      break;
+                  }
+                },
+                itemBuilder: (context) => [
+                  // Search
+                  const PopupMenuItem(
+                    value: 'search',
+                    child: Row(
+                      children: [
+                        Icon(Icons.search_rounded, size: 20),
+                        SizedBox(width: 12),
+                        Text('Search Folders'),
+                      ],
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Document Companion',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      Text(
-                        'Your documents',
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    ],
+                  // Filter
+                  PopupMenuItem(
+                    value: 'filter',
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.filter_list_rounded,
+                          size: 20,
+                          color: _hasActiveFilters
+                              ? CustomColors.primary
+                              : null,
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          'Filter',
+                          style: TextStyle(
+                            color: _hasActiveFilters
+                                ? CustomColors.primary
+                                : null,
+                            fontWeight: _hasActiveFilters
+                                ? FontWeight.w500
+                                : null,
+                          ),
+                        ),
+                        if (_hasActiveFilters) ...[
+                          const Spacer(),
+                          Container(
+                            width: 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              color: CustomColors.primary,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  const PopupMenuDivider(),
+                  // Theme
+                  PopupMenuItem(
+                    value: 'theme',
+                    child: Row(
+                      children: [
+                        Icon(
+                          CustomTheme().isDarkMode
+                              ? Icons.light_mode_rounded
+                              : Icons.dark_mode_rounded,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          CustomTheme().isDarkMode ? 'Light Mode' : 'Dark Mode',
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Tags
+                  const PopupMenuItem(
+                    value: 'tags',
+                    child: Row(
+                      children: [
+                        Icon(Icons.label_rounded, size: 20),
+                        SizedBox(width: 12),
+                        Text('Manage Tags'),
+                      ],
+                    ),
+                  ),
+                  const PopupMenuItem(
+                    value: 'settings',
+                    child: Row(
+                      children: [
+                        Icon(Icons.settings_rounded, size: 20),
+                        SizedBox(width: 12),
+                        Text('Settings'),
+                      ],
+                    ),
                   ),
                 ],
               ),
-        actions: [
-          if (_isSearching)
-            IconButton(
-              onPressed: () {
-                UXHelpers.selectionFeedback();
-                _toggleSearch();
-              },
-              icon: const Icon(Icons.close_rounded),
-              tooltip: 'Close search',
-            )
-          else
-            PopupMenuButton<String>(
-              icon: const Icon(Icons.more_vert_rounded),
-              tooltip: 'More options',
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              onSelected: (value) {
-                UXHelpers.selectionFeedback();
-                switch (value) {
-                  case 'search':
-                    _toggleSearch();
-                    break;
-                  case 'sort':
-                    // Sort menu will be handled by the sort popup in folders section
-                    break;
-                  case 'filter':
-                    showDialog(
-                      context: context,
-                      builder: (context) => const FilterDialog(),
-                    ).then((_) {
-                      if (context.mounted) {
-                        setState(() {
-                          _hasActiveFilters = folderBloc.hasActiveFilters;
-                        });
-                      }
-                    });
-                    break;
-                  case 'theme':
-                    final theme = CustomTheme();
-                    theme.toggleTheme();
-                    UXHelpers.successFeedback();
-                    break;
-                  case 'tags':
-                    tagService.showTagManagementDialog(context);
-                    break;
-                  case 'settings':
-                    Navigator.pushNamed(context, SettingsPage.route);
-                    break;
-                }
-              },
-              itemBuilder: (context) => [
-                // Search
-                const PopupMenuItem(
-                  value: 'search',
-                  child: Row(
-                    children: [
-                      Icon(Icons.search_rounded, size: 20),
-                      SizedBox(width: 12),
-                      Text('Search Folders'),
-                    ],
+          ],
+        ),
+        floatingActionButton: FloatingActionButton.extended(
+          onPressed: () {
+            UXHelpers.mediumImpact();
+            showModalBottomSheet(
+              context: context,
+              isScrollControlled: true,
+              backgroundColor: Colors.transparent,
+              builder: (context) => CreateBottomModalSheet(),
+            );
+          },
+          icon: const Icon(Icons.add_rounded),
+          label: const Text('Create'),
+        ),
+        body: SafeArea(
+          child: Column(
+            children: [
+              // Services Section
+              SizedBox(
+                height: 100,
+                child: ListView.separated(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
                   ),
-                ),
-                // Filter
-                PopupMenuItem(
-                  value: 'filter',
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.filter_list_rounded,
-                        size: 20,
-                        color: _hasActiveFilters ? CustomColors.primary : null,
-                      ),
+                  physics: const BouncingScrollPhysics(),
+                  scrollDirection: Axis.horizontal,
+                  itemCount: Constant.availableServices.length,
+                  itemBuilder: (context, index) => _ServiceCard(
+                    icon: Constant.availableServices[index].operationIcon,
+                    title: Constant.availableServices[index].title,
+                    onTap: () => _handleServiceTap(context, index),
+                  ),
+                  separatorBuilder: (context, index) =>
                       const SizedBox(width: 12),
-                      Text(
-                        'Filter',
-                        style: TextStyle(
-                          color: _hasActiveFilters ? CustomColors.primary : null,
-                          fontWeight: _hasActiveFilters ? FontWeight.w500 : null,
-                        ),
-                      ),
-                      if (_hasActiveFilters) ...[
-                        const Spacer(),
-                        Container(
-                          width: 8,
-                          height: 8,
-                          decoration: BoxDecoration(
-                            color: CustomColors.primary,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
                 ),
-                const PopupMenuDivider(),
-                // Theme
-                PopupMenuItem(
-                  value: 'theme',
-                  child: Row(
-                    children: [
-                      Icon(
-                        CustomTheme().isDarkMode
-                            ? Icons.light_mode_rounded
-                            : Icons.dark_mode_rounded,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        CustomTheme().isDarkMode ? 'Light Mode' : 'Dark Mode',
-                      ),
-                    ],
-                  ),
-                ),
-                // Tags
-                const PopupMenuItem(
-                  value: 'tags',
-                  child: Row(
-                    children: [
-                      Icon(Icons.label_rounded, size: 20),
-                      SizedBox(width: 12),
-                      Text('Manage Tags'),
-                    ],
-                  ),
-                ),
-                const PopupMenuItem(
-                  value: 'settings',
-                  child: Row(
-                    children: [
-                      Icon(Icons.settings_rounded, size: 20),
-                      SizedBox(width: 12),
-                      Text('Settings'),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          UXHelpers.mediumImpact();
-          showModalBottomSheet(
-            context: context,
-            isScrollControlled: true,
-            backgroundColor: Colors.transparent,
-            builder: (context) => CreateBottomModalSheet(),
-          );
-        },
-        icon: const Icon(Icons.add_rounded),
-        label: const Text('Create'),
-      ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Services Section
-            SizedBox(
-              height: 100,
-              child: ListView.separated(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 12,
-                ),
-                physics: const BouncingScrollPhysics(),
-                scrollDirection: Axis.horizontal,
-                itemCount: Constant.availableServices.length,
-                itemBuilder: (context, index) => _ServiceCard(
-                  icon: Constant.availableServices[index].operationIcon,
-                  title: Constant.availableServices[index].title,
-                  onTap: () => _handleServiceTap(context, index),
-                ),
-                separatorBuilder: (context, index) => const SizedBox(width: 12),
               ),
-            ),
-            // Recent Documents Section
-            StreamBuilder<List<RecentDocumentModel>>(
-              stream: recentDocumentsBloc.recentDocumentsStream,
-              builder: (context, snapshot) {
-                if (snapshot.hasData && snapshot.data!.isNotEmpty) {
-                  return _RecentDocumentsSection(
-                    recentDocuments: snapshot.data!,
-                  );
-                }
-                return const SizedBox.shrink();
-              },
-            ),
-            // Folders Section
-            Expanded(
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surface,
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(24),
+              // Coming Soon Features Preview
+              _ComingSoonSection(),
+              const SizedBox(height: 12),
+              // Recent Documents Section
+              StreamBuilder<List<RecentDocumentModel>>(
+                stream: recentDocumentsBloc.recentDocumentsStream,
+                builder: (context, snapshot) {
+                  if (snapshot.hasData && snapshot.data!.isNotEmpty) {
+                    return _RecentDocumentsSection(
+                      recentDocuments: snapshot.data!,
+                    );
+                  }
+                  return const SizedBox.shrink();
+                },
+              ),
+              // Folders Section
+              Expanded(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surface,
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(24),
+                    ),
                   ),
-                ),
-                child: Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Folders',
-                            style: Theme.of(context).textTheme.headlineSmall,
-                          ),
-                          Row(
-                            children: [
-                              PopupMenuButton<String>(
-                                icon: const Icon(Icons.sort_rounded),
-                                tooltip: 'Sort',
-                                iconSize: 20,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                onSelected: (value) {
-                                  UXHelpers.selectionFeedback();
-                                  final parts = value.split('_');
-                                  final sortBy = parts[0];
-                                  final ascending = parts[1] == 'asc';
-                                  folderBloc.sortFolders(
-                                    sortBy,
-                                    ascending: ascending,
-                                  );
-                                  UXHelpers.successFeedback();
-                                },
-                                itemBuilder: (context) => [
-                                  const PopupMenuItem(
-                                    value: 'name_asc',
-                                    child: Row(
-                                      children: [
-                                        Icon(Icons.sort_by_alpha_rounded, size: 20),
-                                        SizedBox(width: 12),
-                                        Text('Name (A-Z)'),
-                                      ],
-                                    ),
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Folders',
+                              style: Theme.of(context).textTheme.headlineSmall,
+                            ),
+                            Row(
+                              children: [
+                                PopupMenuButton<String>(
+                                  icon: const Icon(Icons.sort_rounded),
+                                  tooltip: 'Sort',
+                                  iconSize: 20,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
                                   ),
-                                  const PopupMenuItem(
-                                    value: 'name_desc',
-                                    child: Row(
-                                      children: [
-                                        Icon(Icons.sort_by_alpha_rounded, size: 20),
-                                        SizedBox(width: 12),
-                                        Text('Name (Z-A)'),
-                                      ],
-                                    ),
-                                  ),
-                                  const PopupMenuDivider(),
-                                  const PopupMenuItem(
-                                    value: 'created_desc',
-                                    child: Row(
-                                      children: [
-                                        Icon(Icons.access_time_rounded, size: 20),
-                                        SizedBox(width: 12),
-                                        Text('Newest First'),
-                                      ],
-                                    ),
-                                  ),
-                                  const PopupMenuItem(
-                                    value: 'created_asc',
-                                    child: Row(
-                                      children: [
-                                        Icon(Icons.access_time_rounded, size: 20),
-                                        SizedBox(width: 12),
-                                        Text('Oldest First'),
-                                      ],
-                                    ),
-                                  ),
-                                  const PopupMenuItem(
-                                    value: 'modified_desc',
-                                    child: Row(
-                                      children: [
-                                        Icon(Icons.update_rounded, size: 20),
-                                        SizedBox(width: 12),
-                                        Text('Recently Modified'),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Builder(
-                                builder: (context) {
-                                  // Check filter status by listening to folder list changes
-                                  return StreamBuilder<List<FolderViewModel>>(
-                                    stream: folderBloc.folderList,
-                                    builder: (context, _) {
-                                      final hasFilters = folderBloc.hasActiveFilters;
-                                      return Stack(
+                                  onSelected: (value) {
+                                    UXHelpers.selectionFeedback();
+                                    final parts = value.split('_');
+                                    final sortBy = parts[0];
+                                    final ascending = parts[1] == 'asc';
+                                    folderBloc.sortFolders(
+                                      sortBy,
+                                      ascending: ascending,
+                                    );
+                                    UXHelpers.successFeedback();
+                                  },
+                                  itemBuilder: (context) => [
+                                    const PopupMenuItem(
+                                      value: 'name_asc',
+                                      child: Row(
                                         children: [
-                                          IconButton(
-                                            onPressed: () async {
-                                              UXHelpers.selectionFeedback();
-                                              await showDialog(
-                                                context: context,
-                                                builder: (context) => const FilterDialog(),
-                                              );
-                                              // Refresh the UI after dialog closes
-                                              if (context.mounted) {
-                                                setState(() {
-                                                  _hasActiveFilters = folderBloc.hasActiveFilters;
-                                                });
-                                              }
-                                            },
-                                            icon: Icon(
-                                              Icons.filter_list_rounded,
-                                              color: hasFilters
-                                                  ? CustomColors.primary
-                                                  : null,
-                                            ),
-                                            tooltip: 'Filter',
-                                            iconSize: 20,
+                                          Icon(
+                                            Icons.sort_by_alpha_rounded,
+                                            size: 20,
                                           ),
-                                          if (hasFilters)
-                                            Positioned(
-                                              right: 8,
-                                              top: 8,
-                                              child: Container(
-                                                width: 8,
-                                                height: 8,
-                                                decoration: BoxDecoration(
-                                                  color: CustomColors.primary,
-                                                  shape: BoxShape.circle,
+                                          SizedBox(width: 12),
+                                          Text('Name (A-Z)'),
+                                        ],
+                                      ),
+                                    ),
+                                    const PopupMenuItem(
+                                      value: 'name_desc',
+                                      child: Row(
+                                        children: [
+                                          Icon(
+                                            Icons.sort_by_alpha_rounded,
+                                            size: 20,
+                                          ),
+                                          SizedBox(width: 12),
+                                          Text('Name (Z-A)'),
+                                        ],
+                                      ),
+                                    ),
+                                    const PopupMenuDivider(),
+                                    const PopupMenuItem(
+                                      value: 'created_desc',
+                                      child: Row(
+                                        children: [
+                                          Icon(
+                                            Icons.access_time_rounded,
+                                            size: 20,
+                                          ),
+                                          SizedBox(width: 12),
+                                          Text('Newest First'),
+                                        ],
+                                      ),
+                                    ),
+                                    const PopupMenuItem(
+                                      value: 'created_asc',
+                                      child: Row(
+                                        children: [
+                                          Icon(
+                                            Icons.access_time_rounded,
+                                            size: 20,
+                                          ),
+                                          SizedBox(width: 12),
+                                          Text('Oldest First'),
+                                        ],
+                                      ),
+                                    ),
+                                    const PopupMenuItem(
+                                      value: 'modified_desc',
+                                      child: Row(
+                                        children: [
+                                          Icon(Icons.update_rounded, size: 20),
+                                          SizedBox(width: 12),
+                                          Text('Recently Modified'),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                Builder(
+                                  builder: (context) {
+                                    // Check filter status by listening to folder list changes
+                                    return StreamBuilder<List<FolderViewModel>>(
+                                      stream: folderBloc.folderList,
+                                      builder: (context, _) {
+                                        final hasFilters =
+                                            folderBloc.hasActiveFilters;
+                                        return Stack(
+                                          children: [
+                                            IconButton(
+                                              onPressed: () async {
+                                                UXHelpers.selectionFeedback();
+                                                await showDialog(
+                                                  context: context,
+                                                  builder: (context) =>
+                                                      const FilterDialog(),
+                                                );
+                                                // Refresh the UI after dialog closes
+                                                if (context.mounted) {
+                                                  setState(() {
+                                                    _hasActiveFilters =
+                                                        folderBloc
+                                                            .hasActiveFilters;
+                                                  });
+                                                }
+                                              },
+                                              icon: Icon(
+                                                Icons.filter_list_rounded,
+                                                color: hasFilters
+                                                    ? CustomColors.primary
+                                                    : null,
+                                              ),
+                                              tooltip: 'Filter',
+                                              iconSize: 20,
+                                            ),
+                                            if (hasFilters)
+                                              Positioned(
+                                                right: 8,
+                                                top: 8,
+                                                child: Container(
+                                                  width: 8,
+                                                  height: 8,
+                                                  decoration: BoxDecoration(
+                                                    color: CustomColors.primary,
+                                                    shape: BoxShape.circle,
+                                                  ),
                                                 ),
                                               ),
-                                            ),
+                                          ],
+                                        );
+                                      },
+                                    );
+                                  },
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      Expanded(
+                        child: RefreshIndicator(
+                          onRefresh: _refreshFolders,
+                          color: CustomColors.primary,
+                          child: StreamBuilder<List<FolderViewModel>>(
+                            stream: folderBloc.folderList,
+                            builder:
+                                (
+                                  context,
+                                  AsyncSnapshot<List<FolderViewModel>> snapshot,
+                                ) {
+                                  if (snapshot.hasData) {
+                                    final folders = snapshot.data;
+                                    if (folders?.isEmpty ?? true) {
+                                      return Column(
+                                        children: [
+                                          Expanded(child: _EmptyState()),
+                                          BannerAdWidget(),
                                         ],
                                       );
-                                    },
-                                  );
-                                },
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    Expanded(
-                      child: RefreshIndicator(
-                        onRefresh: _refreshFolders,
-                        color: CustomColors.primary,
-                        child: StreamBuilder<List<FolderViewModel>>(
-                          stream: folderBloc.folderList,
-                          builder:
-                              (
-                                context,
-                                AsyncSnapshot<List<FolderViewModel>> snapshot,
-                              ) {
-                                if (snapshot.hasData) {
-                                  final folders = snapshot.data;
-                                  if (folders?.isEmpty ?? true) {
+                                    }
                                     return Column(
                                       children: [
-                                        Expanded(child: _EmptyState()),
+                                        Expanded(
+                                          child: GridView.builder(
+                                            padding: const EdgeInsets.fromLTRB(
+                                              20,
+                                              20,
+                                              20,
+                                              8,
+                                            ),
+                                            gridDelegate:
+                                                const SliverGridDelegateWithFixedCrossAxisCount(
+                                                  crossAxisCount: 2,
+                                                  childAspectRatio: 0.85,
+                                                  crossAxisSpacing: 16,
+                                                  mainAxisSpacing: 16,
+                                                ),
+                                            itemCount: folders?.length ?? 0,
+                                            itemBuilder: (context, index) {
+                                              return _FolderCard(
+                                                folder: folders![index],
+                                                onTap: () {
+                                                  UXHelpers.selectionFeedback();
+                                                  Navigator.pushNamed(
+                                                    context,
+                                                    FolderPage.route,
+                                                    arguments: folders[index],
+                                                  );
+                                                },
+                                              );
+                                            },
+                                          ),
+                                        ),
                                         BannerAdWidget(),
                                       ],
                                     );
                                   }
-                                  return Column(
-                                    children: [
-                                      Expanded(
-                                        child: GridView.builder(
-                                          padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
-                                          gridDelegate:
-                                              const SliverGridDelegateWithFixedCrossAxisCount(
-                                                crossAxisCount: 2,
-                                                childAspectRatio: 0.85,
-                                                crossAxisSpacing: 16,
-                                                mainAxisSpacing: 16,
-                                              ),
-                                          itemCount: folders?.length ?? 0,
-                                          itemBuilder: (context, index) {
-                                            return _FolderCard(
-                                              folder: folders![index],
-                                              onTap: () {
-                                                UXHelpers.selectionFeedback();
-                                                Navigator.pushNamed(
-                                                  context,
-                                                  FolderPage.route,
-                                                  arguments: folders[index],
-                                                );
-                                              },
-                                            );
-                                          },
-                                        ),
-                                      ),
-                                      BannerAdWidget(),
-                                    ],
+                                  return const Center(
+                                    child: CircularProgressIndicator(),
                                   );
-                                }
-                                return const Center(
-                                  child: CircularProgressIndicator(),
-                                );
-                              },
+                                },
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
       ),
     );
   }
@@ -721,7 +759,9 @@ class _FolderCard extends StatelessWidget {
                                 vertical: 3,
                               ),
                               decoration: BoxDecoration(
-                                color: _parseColor(tag.color).withValues(alpha: 0.2),
+                                color: _parseColor(
+                                  tag.color,
+                                ).withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
@@ -770,9 +810,9 @@ class _RecentDocumentsSection extends StatelessWidget {
             children: [
               Text(
                 'Recent Documents',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
               ),
               TextButton(
                 onPressed: () {
@@ -853,10 +893,7 @@ class _RecentDocumentCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: Theme.of(context).dividerColor,
-            width: 1,
-          ),
+          border: Border.all(color: Theme.of(context).dividerColor, width: 1),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -905,9 +942,9 @@ class _RecentDocumentCard extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 4),
               child: Text(
                 recentDocument.documentName,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      fontSize: 10,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(fontSize: 10),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
@@ -946,17 +983,169 @@ class _EmptyState extends StatelessWidget {
               ),
               const SizedBox(height: 24),
               Text(
-                'No folders yet',
-                style: Theme.of(context).textTheme.headlineSmall,
+                'Your Document Hub Awaits',
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
               Text(
-                'Create your first folder to organize your documents',
+                'Create your first folder to start organizing all your documents',
                 style: Theme.of(context).textTheme.bodyMedium,
                 textAlign: TextAlign.center,
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ComingSoonSection extends StatelessWidget {
+  final List<Map<String, dynamic>> comingSoonFeatures = [
+    {
+      'icon': Icons.text_fields_rounded,
+      'title': 'OCR',
+      'description': 'Text recognition',
+      'color': CustomColors.primary,
+    },
+    {
+      'icon': Icons.edit_rounded,
+      'title': 'Annotations',
+      'description': 'Mark up docs',
+      'color': CustomColors.accent,
+    },
+    {
+      'icon': Icons.draw_rounded,
+      'title': 'Signatures',
+      'description': 'Digital signing',
+      'color': CustomColors.warning,
+    },
+    {
+      'icon': Icons.backup_rounded,
+      'title': 'Local Backup',
+      'description': 'Export & restore',
+      'color': CustomColors.primary,
+    },
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 80,
+      child: ListView.separated(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        itemCount: comingSoonFeatures.length,
+        separatorBuilder: (context, index) => const SizedBox(width: 12),
+        itemBuilder: (context, index) {
+          final feature = comingSoonFeatures[index];
+          return _ComingSoonCard(
+            icon: feature['icon'] as IconData,
+            title: feature['title'] as String,
+            description: feature['description'] as String,
+            color: feature['color'] as Color,
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _ComingSoonCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String description;
+  final Color color;
+
+  const _ComingSoonCard({
+    required this.icon,
+    required this.title,
+    required this.description,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Opacity(
+      opacity: 0.7,
+      child: Container(
+        width: 100,
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: Theme.of(context).dividerColor.withValues(alpha: 0.5),
+            width: 1,
+          ),
+        ),
+        child: Stack(
+          children: [
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(5),
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    icon,
+                    color: color.withValues(alpha: 0.7),
+                    size: 16,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Flexible(
+                  child: Text(
+                    title,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Flexible(
+                  child: Text(
+                    description,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      fontSize: 9,
+                      color: CustomColors.textSecondary.withValues(alpha: 0.7),
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+            Positioned(
+              top: 4,
+              right: 4,
+              child: Container(
+                padding: const EdgeInsets.all(2),
+                decoration: BoxDecoration(
+                  color: CustomColors.primary.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.auto_awesome_rounded,
+                  size: 8,
+                  color: CustomColors.primary.withValues(alpha: 0.6),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

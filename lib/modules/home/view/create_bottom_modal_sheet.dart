@@ -34,9 +34,27 @@ class CreateBottomModalSheet extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
             child: Column(
               children: [
-                Text(
-                  'Create new',
-                  style: Theme.of(context).textTheme.headlineMedium,
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Create new',
+                            style: Theme.of(context).textTheme.headlineMedium,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Scan, import, or organize your documents',
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: CustomColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 24),
                 Row(

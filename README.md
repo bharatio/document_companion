@@ -67,13 +67,14 @@ Document Companion is a modern, cross-platform document management application b
   - Smooth animations and transitions
   - Responsive layout for all screen sizes
 
-### Planned Features
+### Roadmap
 
-- PDF Editor and Creator
-- Advanced folder tagging system
-- Cloud storage integration
-- OCR (Optical Character Recognition)
-- Document sharing and collaboration
+See [DEVELOPMENT_ROADMAP.md](DEVELOPMENT_ROADMAP.md) for the full phased roadmap, including:
+- Scanner improvements (edge detection, auto-capture, real-time overlay)
+- OCR & text recognition
+- Advanced filters & image enhancement
+- Document editing & annotations
+- Cloud sync & collaboration
 
 ## 📸 Screenshots
 

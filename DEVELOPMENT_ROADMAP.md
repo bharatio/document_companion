@@ -1,544 +1,342 @@
-# 🗺️ Document Companion - Development Roadmap
+# Development Roadmap
 
-## 📊 Current Status (v1.0.0)
-
-### ✅ Completed Features
-
-#### Core Functionality
-- ✅ **Document Scanning**
-  - Camera-based document capture
-  - Automatic edge detection and contour finding
-  - Manual crop adjustment with drag handles
-  - Image filters (Natural, Gray, Eco)
-  - High-resolution image capture
-  - Multiple image capture support
-  - Modern minimalist UI
-
-- ✅ **Folder Management**
-  - Create folders with custom names
-  - Folder listing with modern card-based UI
-  - SQLite database storage
-  - Folder navigation
-
-- ✅ **Image Management**
-  - Temporary image storage (CurrentImages table)
-  - Image preview with page navigation
-  - Save images to folders
-  - Link images to folders in database
-  - Display images in folders (grid/list view)
-
-- ✅ **PDF Conversion**
-  - Convert multiple images to PDF
-  - PDF generation with proper page formatting
-  - Save PDF to device storage
-  - Share PDF functionality
-  - Print PDF support
-  - PDF options dialog (save, share, print)
-
-- ✅ **UI/UX**
-  - Modern Material 3 design
-  - Dark mode support
-  - Custom theme system
-  - Responsive layouts
-  - Smooth animations
-  - Clean, minimalist interface
-
-#### Technical Infrastructure
-- ✅ BLoC state management
-- ✅ SQLite local database
-- ✅ Database schema with folder-image relationships
-- ✅ Multi-platform support (Android, iOS, Web, Desktop)
-- ✅ Internationalization setup
+> **Document Companion** — Open-source document scanner & manager built with Flutter.
+> MIT Licensed. Contributions welcome.
 
 ---
 
-## 🚀 Phase 1: Core PDF Features - Make it the BEST Document App ✅ COMPLETE
+## Current State (v1.0.0)
 
-### Priority 1: PDF Services (HIGH PRIORITY - Core Differentiators) ✅
+### What works
 
-#### 1.1 Merge PDF ⭐⭐⭐ ✅
-- [x] Select multiple PDFs from folders ✅
-- [x] PDF selection UI with preview ✅
-- [x] Merge order customization ✅
-- [x] Save merged PDF ✅
-- [x] Share merged PDF ✅
-- [x] Connect to existing "Merge PDF" button ✅
+- Camera capture and manual crop with 4-corner drag handles
+- Folder management with tags, search, sort, date filters
+- Image management — save to folders, grid/list view, viewer with zoom
+- PDF tools — create from images, merge, split, compress, import, PDF-to-Word
+- Batch operations — multi-select, batch delete/move/convert
+- Recent documents tracking
+- Dark mode, Material 3 theming
+- Google Mobile Ads integration
 
-#### 1.2 Import PDF ⭐⭐⭐ ✅
-- [x] Add `file_picker` package for PDF selection ✅
-- [x] Import PDF files from device storage ✅
-- [x] PDF file validation ✅
-- [x] Import to existing or new folder ✅
-- [x] Extract PDF pages as images ✅
-- [x] Connect to existing "Import PDF" button ✅
+### What doesn't work (despite UI/docs claiming otherwise)
 
-#### 1.3 Split PDF ⭐⭐ ✅
-- [x] Select PDF from folders ✅
-- [x] Page range selection UI ✅
-- [x] Extract specific pages ✅
-- [x] Extract page ranges ✅
-- [x] Save split PDFs ✅
-- [x] Multiple split options (single pages, ranges) ✅
-- [x] Share split PDFs ✅
-
-#### 1.4 PDF Compression ⭐⭐ ✅
-- [x] PDF compression algorithms ✅
-- [x] Compression quality options (Low/Medium/High) ✅
-- [x] Size reduction preview (before/after) ✅
-- [x] Compress and save ✅
-- [x] Connect to existing "File Compress" button ✅
-
-#### 1.5 PDF to Word Conversion ⭐⭐ ✅
-- [x] PDF parsing and text extraction ✅
-- [x] Word document generation (.docx) ✅
-- [x] Export options ✅
-- [x] Connect to existing "PDF to Word" button ✅
-
-### Priority 2: File Import & Management (Already Completed)
-- ✅ Gallery Import - Import single/multiple images from gallery
-- ✅ File Import - Import images to folders
-- ✅ Rename documents
-- ✅ Delete documents
-- ✅ Move documents between folders
-- ✅ Document metadata (size, date, dimensions)
-
-### Priority 2: Search & Organization
-
-#### 2.1 Search Functionality
-- [ ] Full-text search across folder names
-- [ ] Search within document names
-- [ ] Recent searches
-- [ ] Search filters (date range, folder, type)
-- [ ] Highlight search results
-- [ ] Search suggestions
-
-#### 2.2 Sorting & Filtering ✅
-- [x] Sort by: Name, Date Created, Date Modified ✅
-- [x] Filter by: Date Range (Created/Modified Date) ✅
-- [x] Quick filters (Today, This Week, This Month, All Time) ✅
-- [x] Custom date range selection ✅
-- [x] Visual indicator when filters are active ✅
-- [x] Clear filter functionality ✅
-- [ ] Filter by: Folder, Document Type
-- [ ] Save filter presets
-- [ ] Multi-select mode for batch operations
-
-#### 2.3 Tags System
-- [ ] Add tags to folders and documents
-- [ ] Tag management (create, edit, delete)
-- [ ] Filter by tags
-- [ ] Tag suggestions
-- [ ] Color-coded tags
-- [ ] Tag autocomplete
-
-### Priority 3: User Experience Improvements
-
-#### 3.1 Recent Documents
-- [ ] Track recently accessed documents
-- [ ] Recent documents widget on homepage
-- [ ] Quick access to recent items
-- [ ] Recently viewed folders
-- [ ] Activity timeline
-
-#### 3.2 Batch Operations
-- [ ] Multi-select documents
-- [ ] Batch delete
-- [ ] Batch move/copy
-- [ ] Batch convert to PDF
-- [ ] Batch share
-- [ ] Batch tag
-
-#### 3.3 Document Viewer
-- [ ] Full-screen image viewer
-- [ ] Zoom and pan functionality
-- [ ] Swipe between images
-- [ ] Image rotation
-- [ ] Image information display
+- **Edge detection** — `MethodChannel` calls `findContourPhoto` but no native code exists on Android or iOS. Returns `null` every time. Users always get default crop corners.
+- **Perspective correction** — `adjustingPerspective` also has no native handler. Falls back to rectangular bounding-box crop (no actual perspective warp).
+- **Image filters** — `applyFilter` native call fails. Falls back to Dart isolate, but "Gray" and "Eco" filters are both identical (`img.grayscale`).
+- **Auto-capture** — Not implemented.
+- **Real-time contour overlay** — Not implemented. Camera shows raw feed only.
+- **OCR** — UI labels exist, no implementation.
+- **Tests** — Single placeholder test that tests a counter app, not this app.
 
 ---
 
-## 🎯 Phase 2: Organization & Productivity Features (Weeks 5-8)
+## Roadmap
 
-### Priority 3: Batch Operations & Efficiency
+### Phase 0 — Bug Fixes & Technical Debt
 
-#### 3.1 Batch Operations
-- [ ] Multi-select mode for documents
-- [ ] Batch delete
-- [ ] Batch move/copy between folders
-- [ ] Batch convert to PDF
-- [ ] Batch share
-- [ ] Batch tag
-- [ ] Selection counter and action bar
+> Fix what's broken before building new things.
+> **Estimated effort:** 2-3 weeks
+> **Labels:** `phase-0`, `bug`, `good-first-issue`, `technical-debt`
 
-#### 3.2 Recent Documents
-- [ ] Track recently accessed documents
-- [ ] Recent documents widget on homepage
-- [ ] Quick access to recent items
-- [ ] Recently viewed folders
-- [ ] Activity timeline
+| # | Task | Difficulty | Labels |
+|---|------|-----------|--------|
+| 0.1 | **Fix `deleteCurrentImage()` missing WHERE clause** — Can delete all rows instead of one | Easy | `bug`, `critical`, `good-first-issue` |
+| 0.2 | **Fix `bool.fromEnvironment` misuse** in `CurrentImageDatabaseHandler` — Should be `== 'true'` string comparison | Easy | `bug`, `good-first-issue` |
+| 0.3 | **Add missing `await`** on `FolderTableHandler.insertFolder` | Easy | `bug`, `good-first-issue` |
+| 0.4 | **Fix `FolderBloc.updateFolder`** — `firstWhere` without `orElse` throws if folder not found | Easy | `bug`, `good-first-issue` |
+| 0.5 | **Dispose StreamControllers** in all custom BLoCs (`FolderBloc`, `ImageBloc`, `TagBloc`, `RecentDocumentsBloc`, `CurrentImageBloc`) | Easy | `bug`, `memory-leak` |
+| 0.6 | **Rename database** from `"test.db"` to `"document_companion.db"` with migration | Easy | `technical-debt`, `good-first-issue` |
+| 0.7 | **Fix "Eco" filter** — Currently identical to "Gray". Implement actual eco filter (e.g., reduced contrast grayscale or light threshold) | Easy | `bug`, `scanner` |
+| 0.8 | **Add `FolderModel.fromMap`** factory constructor — `toMap` exists but no deserialization | Easy | `technical-debt`, `good-first-issue` |
+| 0.9 | **Extract duplicate `_parseColor`** into shared `ColorUtils` — Duplicated in 4+ widgets | Easy | `technical-debt`, `good-first-issue` |
+| 0.10 | **Fix `SaveImageBloc` force-unwrap** — `CustomKey.navigatorKey.currentContext!` can crash | Medium | `bug` |
+| 0.11 | **Remove hardcoded ad unit IDs** — Move to a config/constants file, use test IDs in debug builds | Medium | `technical-debt`, `ads` |
+| 0.12 | **Replace placeholder widget test** with actual tests for at least `FolderBloc` and `ImageBloc` | Medium | `testing` |
+| 0.13 | **Unify state management** — Migrate custom stream-based BLoCs to `flutter_bloc` pattern (matching scanner module) or document why both exist | Hard | `technical-debt`, `architecture` |
 
-### Priority 5: Document Editing
-
-#### 5.1 Basic Editing
-- [ ] Image rotation
-- [ ] Image flip (horizontal/vertical)
-- [ ] Brightness/contrast adjustment
-- [ ] Crop and resize
-- [ ] Undo/redo functionality
-
-#### 5.2 Advanced Editing
-- [ ] Image annotations (text, shapes, arrows)
-- [ ] Highlighting
-- [ ] Drawing/sketching
-- [ ] Signature capture
-- [ ] Watermark addition
-- [ ] Red-eye removal
-
-### Priority 6: OCR (Optical Character Recognition)
-
-#### 6.1 Text Recognition
-- [ ] Integrate OCR library (google_mlkit_text_recognition)
-- [ ] Text extraction from images
-- [ ] Multi-language support
-- [ ] Searchable PDF generation
-- [ ] Text editing capabilities
-- [ ] Export extracted text
-
-#### 6.2 Smart Features
-- [ ] Auto-categorization using ML
-- [ ] Smart folder suggestions
-- [ ] Duplicate detection
-- [ ] Document type recognition
-- [ ] Auto-naming based on content
+**Exit criteria:** All critical bugs fixed, no data-loss risks, StreamControllers properly disposed.
 
 ---
 
-## 🌟 Phase 3: Premium Features (Weeks 9-12)
+### Phase 1 — Scanner Foundation
 
-### Priority 7: Local Backup & Export
+> Make edge detection and perspective correction actually work.
+> **Estimated effort:** 2-4 weeks
+> **Labels:** `phase-1`, `scanner`, `enhancement`
+> **Depends on:** Phase 0
 
-#### 7.1 Local Backup Features
-- [ ] Manual backup to device storage
-- [ ] Automatic local backup (scheduled)
-- [ ] Backup to external storage (SD card on Android)
-- [ ] Backup to Files app (iOS)
-- [ ] Backup encryption
-- [ ] Selective backup (choose folders/documents)
-- [ ] Backup compression
+This is the most impactful phase. The app's core promise (document scanning) currently doesn't deliver on edge detection or perspective correction.
 
-#### 7.2 Restore & Import
-- [ ] Restore from backup file
-- [ ] Import from ZIP archive
-- [ ] Export/import database
-- [ ] Verify backup integrity
-- [ ] Partial restore (selective restore)
+#### Option A: Google ML Kit Document Scanner (Recommended)
 
-### Priority 8: Sharing & Collaboration
+The fastest path. Google's Document Scanner API handles edge detection, perspective correction, and image enhancement out of the box.
 
-#### 8.1 Document Sharing
-- [ ] Share via system share sheet (already implemented ✅)
-- [ ] Email integration
-- [ ] QR code generation for documents
-- [ ] Nearby Share (Android) / AirDrop (iOS)
-- [ ] Export options (PDF, PNG, JPEG, TIFF)
-- [ ] Save to Files app
+| # | Task | Difficulty | Labels |
+|---|------|-----------|--------|
+| 1.1 | **Evaluate `google_mlkit_document_scanner`** — Test on Android (API 21+) and iOS, document limitations | Medium | `research`, `scanner` |
+| 1.2 | **Integrate ML Kit Document Scanner** — Add dependency, implement native setup for both platforms | Medium | `scanner`, `feature` |
+| 1.3 | **Connect ML Kit output to existing crop/edit flow** — Feed detected corners into `CropBloc`, feed corrected image into `EditBloc` | Medium | `scanner` |
+| 1.4 | **Remove or gate broken MethodChannel calls** — Clean up `findContourPhoto`, `adjustingPerspective` native calls that do nothing | Easy | `scanner`, `cleanup` |
+| 1.5 | **Test scanner end-to-end** — Verify: capture → detect edges → crop → perspective correct → filter → save | Medium | `scanner`, `testing` |
 
-#### 8.2 Collaboration Features
-- [ ] Share folders with others
-- [ ] Comments on documents
-- [ ] Version history
-- [ ] Team workspaces
+#### Option B: OpenCV via FFI (More control, more effort)
 
-### Priority 9: Advanced Scanner Features
+If ML Kit is too opinionated or doesn't support a target platform.
 
-#### 9.1 Enhanced Scanning
-- [ ] Multi-page document scanning
-- [ ] Auto-scan mode
-- [ ] Flash control
-- [ ] Focus control
-- [ ] Grid overlay
-- [ ] Scan quality presets
-- [ ] Batch scanning
+| # | Task | Difficulty | Labels |
+|---|------|-----------|--------|
+| 1.1b | **Add `opencv_dart` or implement native OpenCV** on Android (Kotlin) and iOS (Swift) | Hard | `scanner`, `native` |
+| 1.2b | **Implement `findContourPhoto`** natively — Canny edge detection → find contours → approximate polygon → return 4 corners | Hard | `scanner`, `native` |
+| 1.3b | **Implement `adjustingPerspective`** natively — `getPerspectiveTransform` + `warpPerspective` | Hard | `scanner`, `native` |
+| 1.4b | **Implement `applyFilter`** natively — Adaptive threshold, color enhancement, sharpen | Medium | `scanner`, `native` |
+| 1.5b | **Test on both platforms** | Medium | `scanner`, `testing` |
 
-#### 9.2 Smart Scanning
-- [ ] Receipt scanning and extraction
-- [ ] Business card scanning
-- [ ] ID document scanning
-- [ ] Form detection
-- [ ] Auto-rotation correction
+**Exit criteria:** Taking a photo of a document on a table produces a properly cropped, perspective-corrected rectangular image.
 
 ---
 
-## 🔧 Phase 4: Performance & Polish (Ongoing)
+### Phase 2 — Modern Scanner UX
 
-### Performance Optimization
-- [ ] Image caching
-- [ ] Lazy loading
-- [ ] Thumbnail generation
-- [ ] Database indexing
-- [ ] Background processing
-- [ ] Memory optimization
-- [ ] App size optimization
+> Real-time edge detection overlay and auto-capture — the features that differentiate a good scanner from a great one.
+> **Estimated effort:** 4-6 weeks
+> **Labels:** `phase-2`, `scanner`, `enhancement`
+> **Depends on:** Phase 1
 
-### UI/UX Polish
-- [ ] Animations and transitions
-- [ ] Loading states
-- [ ] Error handling and messages
-- [ ] Empty states
-- [ ] Onboarding tutorial
-- [ ] Help & documentation
-- [ ] Accessibility improvements
-- [ ] Haptic feedback
+| # | Task | Difficulty | Labels |
+|---|------|-----------|--------|
+| 2.1 | **Real-time camera frame processing** — Hook into `CameraController.startImageStream()`, process every Nth frame | Hard | `scanner`, `performance` |
+| 2.2 | **Live contour overlay** — Draw detected document edges on camera preview using `CustomPainter`. Handle coordinate mapping between camera resolution and screen size | Hard | `scanner`, `ui` |
+| 2.3 | **Contour stabilization** — Debounce/smooth the detected corners across frames to prevent jittering | Medium | `scanner` |
+| 2.4 | **Auto-capture** — When contour is stable for ~1.5 seconds, auto-trigger capture. Show countdown/progress indicator. Haptic feedback on capture | Medium | `scanner`, `ux` |
+| 2.5 | **Visual feedback** — Contour overlay color changes (red → yellow → green) as stability improves. Pulsing animation when ready to capture | Medium | `scanner`, `ui` |
+| 2.6 | **Manual/Auto toggle** — Let users switch between manual tap and auto-capture modes | Easy | `scanner`, `ux` |
+| 2.7 | **Flash improvements** — Auto-flash in low light, flash mode persistence across scans | Easy | `scanner`, `ux` |
+| 2.8 | **Focus tap** — Tap-to-focus on camera preview | Easy | `scanner`, `ux` |
+| 2.9 | **Grid overlay toggle** — Optional rule-of-thirds or document alignment grid | Easy | `scanner`, `ui` |
 
-### Testing & Quality
-- [ ] Unit tests
-- [ ] Widget tests
-- [ ] Integration tests
-- [ ] Performance testing
-- [ ] Crash reporting
-- [ ] Analytics integration
+**Exit criteria:** Camera preview shows live document edges. When held steady over a document, it auto-captures, crops, and perspective-corrects without user tapping anything.
 
 ---
 
-## 📱 Phase 5: Platform-Specific Features
+### Phase 3 — Advanced Filters & Image Enhancement
 
-### Android
-- [ ] Android widgets
-- [ ] Quick actions
-- [ ] Share target
-- [ ] File provider integration
-- [ ] Android Auto (future)
+> Make scanned documents look professional.
+> **Estimated effort:** 2-3 weeks
+> **Labels:** `phase-3`, `scanner`, `enhancement`
+> **Depends on:** Phase 1 (Phase 2 is nice-to-have but not required)
 
-### iOS
-- [ ] iOS widgets
-- [ ] Shortcuts integration
-- [ ] Share extension
-- [ ] Spotlight search
-- [ ] Handoff support
+| # | Task | Difficulty | Labels |
+|---|------|-----------|--------|
+| 3.1 | **Adaptive threshold B&W** — Clean black-and-white for text documents (not just grayscale) | Medium | `scanner`, `filters` |
+| 3.2 | **Auto-enhance / Magic filter** — Auto-adjust brightness, contrast, sharpness for best readability | Medium | `scanner`, `filters` |
+| 3.3 | **Shadow removal** — Normalize uneven lighting across the document | Hard | `scanner`, `filters` |
+| 3.4 | **Sharpen filter** — Unsharp mask for crisp text | Easy | `scanner`, `filters`, `good-first-issue` |
+| 3.5 | **Color document mode** — Enhanced color with white-balance correction | Medium | `scanner`, `filters` |
+| 3.6 | **Filter preview thumbnails** — Show small previews of each filter effect before applying | Medium | `scanner`, `ui` |
+| 3.7 | **Brightness/Contrast sliders** — Manual adjustment controls | Medium | `scanner`, `ui` |
+| 3.8 | **Image rotation** — 90-degree rotation and free rotation | Easy | `scanner`, `good-first-issue` |
 
-### Desktop (Windows, macOS, Linux)
-- [ ] Drag and drop support
-- [ ] Keyboard shortcuts
-- [ ] Menu bar integration
-- [ ] File associations
-- [ ] Multi-window support
+**Exit criteria:** At least 5 distinct, visually different filters. Auto-enhance produces clearly better output than the raw photo for text documents.
 
 ---
 
-## 🎨 Design Improvements
+### Phase 4 — Multi-Page Scanning & Workflow
 
-### Visual Enhancements
-- [ ] Custom app icons
-- [ ] Splash screen
-- [ ] App animations
-- [ ] Micro-interactions
-- [ ] Custom illustrations
-- [ ] Empty state graphics
+> Streamline the flow for scanning multi-page documents.
+> **Estimated effort:** 2-3 weeks
+> **Labels:** `phase-4`, `scanner`, `ux`
+> **Depends on:** Phase 1
 
-### Theme Customization
-- [ ] Multiple color themes
-- [ ] Custom color picker
-- [ ] Font size adjustment
-- [ ] Layout density options
+| # | Task | Difficulty | Labels |
+|---|------|-----------|--------|
+| 4.1 | **Continuous scan flow** — After saving a page, auto-return to camera for next page (skip the "Done" detour) | Medium | `scanner`, `ux` |
+| 4.2 | **Page thumbnail strip** — Scrollable thumbnail strip at bottom of camera screen showing all scanned pages in session | Medium | `scanner`, `ui` |
+| 4.3 | **Page reordering** — Drag-and-drop to reorder pages in preview | Medium | `ux` |
+| 4.4 | **Re-crop / re-edit pages** — Tap a page in preview to go back to crop or edit for that specific page | Medium | `scanner` |
+| 4.5 | **Delete individual pages** from batch before saving | Easy | `ux`, `good-first-issue` |
+| 4.6 | **Page count badge** — Clear indicator on camera screen showing "3 pages scanned" | Easy | `ui`, `good-first-issue` |
+| 4.7 | **Batch apply filter** — Apply same filter to all pages at once | Easy | `scanner`, `ux` |
 
----
-
-## 🔐 Security & Privacy
-
-### Security Features
-- [ ] App lock (PIN/biometric)
-- [ ] Encrypted storage
-- [ ] Secure document deletion
-- [ ] Privacy settings
-- [ ] Data export/import encryption
-
-### Privacy
-- [ ] Privacy policy
-- [ ] Data usage transparency
-- [ ] Permission explanations
-- [ ] Opt-out options
+**Exit criteria:** Scanning a 10-page document is a smooth, uninterrupted flow. User can reorder, re-edit, or delete individual pages before saving.
 
 ---
 
-## 📊 Analytics & Insights
+### Phase 5 — OCR & Smart Features
 
-### Usage Analytics
-- [ ] Document statistics
-- [ ] Storage usage
-- [ ] Most used features
-- [ ] Usage trends
-- [ ] Export statistics
+> Extract text from documents and make them searchable.
+> **Estimated effort:** 3-4 weeks
+> **Labels:** `phase-5`, `ocr`, `ml`, `feature`
+> **Depends on:** Phase 1
 
-### Insights
-- [ ] Storage recommendations
-- [ ] Organization suggestions
-- [ ] Duplicate detection
-- [ ] Cleanup suggestions
+| # | Task | Difficulty | Labels |
+|---|------|-----------|--------|
+| 5.1 | **Integrate `google_mlkit_text_recognition`** — Add dependency, platform setup | Medium | `ocr`, `feature` |
+| 5.2 | **OCR processing pipeline** — Pre-process image (enhance for OCR), run recognition, post-process text | Medium | `ocr` |
+| 5.3 | **OCR results UI** — Display recognized text overlaid on or alongside the document image. Copy-to-clipboard support | Medium | `ocr`, `ui` |
+| 5.4 | **Store recognized text** in SQLite — Add text column to images table, enable full-text search | Medium | `ocr`, `database` |
+| 5.5 | **Searchable PDFs** — Embed OCR text layer in generated PDFs | Hard | `ocr`, `pdf` |
+| 5.6 | **Multi-language support** — Let users select OCR languages, download language packs | Medium | `ocr`, `i18n` |
+| 5.7 | **Smart file naming** — Suggest document names based on OCR content (first line, date found, etc.) | Medium | `ocr`, `ux` |
+| 5.8 | **Text export** — Export recognized text as .txt file | Easy | `ocr`, `good-first-issue` |
 
----
-
-## 🎯 Quick Wins (Can be done anytime)
-
-### Small Improvements
-- [ ] Add haptic feedback
-- [ ] Improve error messages
-- [ ] Add tooltips
-- [ ] Keyboard shortcuts
-- [ ] Swipe gestures
-- [ ] Pull to refresh
-- [ ] Infinite scroll
-- [ ] Skeleton loaders
-- [ ] Toast notifications
-- [ ] Confirmation dialogs
-
-### Bug Fixes & Polish
-- [ ] Fix any reported bugs
-- [ ] Improve performance
-- [ ] Reduce app size
-- [ ] Improve battery usage
-- [ ] Better error recovery
+**Exit criteria:** User can scan a document, extract text, copy it, search across all documents by text content, and generate searchable PDFs.
 
 ---
 
-## 📈 Success Metrics
+### Phase 6 — Document Editing
 
-### User Engagement
-- Daily active users
-- Documents scanned per user
-- Folders created per user
-- PDF conversions per user
-- Average session duration
+> Post-scan editing capabilities.
+> **Estimated effort:** 3-4 weeks
+> **Labels:** `phase-6`, `editing`, `feature`
+> **Depends on:** Phase 3
 
-### Feature Adoption
-- % of users using search
-- % of users using tags
-- % of users using local backup
-- % of users using OCR
-- % of users sharing documents
-- % of users using PDF tools (merge, split, compress)
+| # | Task | Difficulty | Labels |
+|---|------|-----------|--------|
+| 6.1 | **Image rotation** (90° and free) | Easy | `editing`, `good-first-issue` |
+| 6.2 | **Image flip** — Horizontal and vertical | Easy | `editing`, `good-first-issue` |
+| 6.3 | **Re-crop saved documents** — Open crop UI for already-saved images | Medium | `editing` |
+| 6.4 | **Annotations** — Add text overlays, arrows, shapes, highlights | Hard | `editing`, `ui` |
+| 6.5 | **Signature capture** — Draw or import signature, place on document | Hard | `editing` |
+| 6.6 | **Watermark** — Add text or image watermark to documents | Medium | `editing` |
+| 6.7 | **Undo/Redo** — Edit history with undo/redo stack | Medium | `editing` |
+| 6.8 | **PDF annotation** — Add annotations directly on PDF pages | Hard | `editing`, `pdf` |
 
-### Performance
-- App launch time < 2 seconds
-- Scan to save time < 5 seconds
-- PDF generation time < 3 seconds per page
-- Search response time < 500ms
-- Image load time < 1 second
+**Exit criteria:** Users can rotate, re-crop, annotate, and sign documents after saving.
 
 ---
 
-## 🛠️ Technical Debt & Refactoring
+### Phase 7 — Backup, Security & Privacy
 
-### Code Quality
-- [ ] Improve code organization
-- [ ] Add comprehensive comments
-- [ ] Refactor duplicate code
-- [ ] Improve error handling
-- [ ] Add logging system
-- [ ] Code documentation
+> Protect user data and enable backup/restore.
+> **Estimated effort:** 3-4 weeks
+> **Labels:** `phase-7`, `security`, `feature`
+> **Depends on:** Phase 0
 
-### Architecture
-- [ ] Improve BLoC structure
-- [ ] Better separation of concerns
-- [ ] Repository pattern implementation
-- [ ] Dependency injection
-- [ ] Service locator pattern
+| # | Task | Difficulty | Labels |
+|---|------|-----------|--------|
+| 7.1 | **Local backup** — Export all data (DB + images) as encrypted ZIP | Medium | `backup`, `feature` |
+| 7.2 | **Restore from backup** — Import and restore from backup file | Medium | `backup` |
+| 7.3 | **App lock** — PIN or biometric authentication to open app | Medium | `security` |
+| 7.4 | **Encrypted storage** — Encrypt sensitive documents at rest | Hard | `security` |
+| 7.5 | **Secure delete** — Overwrite file data on deletion | Easy | `security`, `good-first-issue` |
+| 7.6 | **Auto-backup** — Scheduled automatic local backups | Medium | `backup` |
+| 7.7 | **Configure release signing** — Android release build currently uses debug signing | Medium | `security`, `build` |
 
-### Database
-- [ ] Database migration system
-- [ ] Query optimization
-- [ ] Index optimization
-- [ ] Backup/restore functionality
+**Exit criteria:** Users can back up and restore their entire document library. App can be locked with biometrics.
 
 ---
 
-## 🎓 Learning & Innovation
+### Phase 8 — Platform Polish & Quality
 
-### AI/ML Features (Future)
-- [ ] Document classification
-- [ ] Smart tagging
-- [ ] Content extraction
-- [ ] Document summarization
-- [ ] Smart search
+> Production readiness, performance, and platform-specific features.
+> **Estimated effort:** 3-4 weeks (ongoing)
+> **Labels:** `phase-8`, `performance`, `platform`
+> **Can start anytime alongside other phases**
 
-### Integration Ideas
-- [ ] Email integration (scan and send)
-- [ ] Calendar integration (scan receipts)
-- [ ] Expense tracking integration
-- [ ] Note-taking app integration
-- [ ] Task management integration
-
----
-
-## 📝 Implementation Guidelines
-
-### Development Process
-1. **Plan**: Create detailed feature spec
-2. **Design**: Create UI mockups/wireframes
-3. **Implement**: Code the feature
-4. **Test**: Write tests and manual testing
-5. **Review**: Code review and QA
-6. **Deploy**: Release and monitor
-
-### Code Standards
-- Follow Flutter/Dart style guide
-- Write meaningful commit messages
-- Create pull requests for review
-- Add tests for new features
-- Update documentation
-
-### Feature Prioritization
-- **Must Have**: Core functionality, critical bugs
-- **Should Have**: Important features, user requests
-- **Nice to Have**: Enhancements, polish
-- **Future**: Long-term features, experiments
+| # | Task | Difficulty | Labels |
+|---|------|-----------|--------|
+| 8.1 | **Break up large files** — `homepage.dart` (~850 lines), `folder_page.dart` (~850 lines), `pdf_service.dart` (~1250 lines) into smaller focused widgets/classes | Medium | `technical-debt`, `good-first-issue` |
+| 8.2 | **Localize all hardcoded strings** — Complete l10n setup, move all UI strings to ARB files | Medium | `i18n` |
+| 8.3 | **Image loading performance** — Thumbnail generation, progressive loading, memory management for large libraries | Medium | `performance` |
+| 8.4 | **Onboarding flow** — First-launch tutorial showing key features | Medium | `ux` |
+| 8.5 | **Empty state illustrations** — Custom graphics for empty folders, no search results, etc. | Easy | `ui`, `design`, `good-first-issue` |
+| 8.6 | **Accessibility** — Screen reader support, semantic labels, contrast ratios | Medium | `a11y` |
+| 8.7 | **Android widget** — Home screen widget for quick scan | Hard | `platform`, `android` |
+| 8.8 | **iOS Share Extension** — Receive shared images/PDFs from other apps | Hard | `platform`, `ios` |
+| 8.9 | **Keyboard shortcuts** — For desktop platforms | Easy | `platform`, `desktop`, `good-first-issue` |
+| 8.10 | **Unit & widget test coverage** — Target 60%+ coverage for BLoCs and services | Hard | `testing` |
+| 8.11 | **CI pipeline** — GitHub Actions for `flutter analyze`, `flutter test`, build checks on PRs | Medium | `ci`, `infrastructure` |
 
 ---
 
-## 🎯 Next Immediate Steps
+### Phase 9 — Cloud & Collaboration (Future)
 
-### Week 1-2 Focus ✅ COMPLETE
-1. ✅ Fix crop button (DONE)
-2. ✅ Fix UI distortion (DONE)
-3. ✅ Implement file import from gallery (DONE)
-4. ✅ Add search functionality (DONE)
-5. ✅ Improve folder page with document count (DONE)
-6. ✅ Document viewer with zoom (DONE)
-7. ✅ Document operations - rename, share, delete (DONE)
+> Cloud sync and multi-device support. Significant infrastructure effort.
+> **Estimated effort:** 6-8 weeks
+> **Labels:** `phase-9`, `cloud`, `feature`
+> **Depends on:** Phase 7
 
-### Phase 1: Core PDF Features ✅ COMPLETE
-1. ✅ Merge PDF (DONE)
-2. ✅ Split PDF (DONE)
-3. ✅ Import PDF (DONE)
-4. ✅ PDF Compression (DONE)
-5. ✅ PDF to Word (DONE)
-
-### Week 3-4 Focus (Next Priority)
-1. ✅ Implement sorting (DONE)
-2. ✅ Implement filtering (date range) (DONE)
-3. [ ] Add tags system
-4. [ ] Batch operations
-5. ✅ Document viewer improvements (DONE)
-6. ✅ Search within folder page (DONE)
-7. ✅ Folder options menu (DONE)
-8. [ ] Performance optimization
+| # | Task | Difficulty | Labels |
+|---|------|-----------|--------|
+| 9.1 | **Cloud storage backend** — Firebase Storage or similar for document sync | Hard | `cloud`, `infrastructure` |
+| 9.2 | **User authentication** — Sign in with Google/Apple for cloud features | Hard | `cloud`, `auth` |
+| 9.3 | **Cross-device sync** — Sync folders, documents, and metadata across devices | Hard | `cloud`, `sync` |
+| 9.4 | **Shared folders** — Share folders with other users via link or email | Hard | `cloud`, `collaboration` |
+| 9.5 | **QR code sharing** — Generate QR code to share document/folder links | Medium | `sharing` |
+| 9.6 | **Version history** — Track document edit history with cloud storage | Hard | `cloud` |
 
 ---
 
-## 🎯 Strategic Success Plan
+### Phase 10 — AI & Intelligence (Future)
 
-For a comprehensive strategic plan focused on features that drive user adoption, retention, and viral growth, see **[SUCCESS_ROADMAP.md](./SUCCESS_ROADMAP.md)**.
+> ML-powered features for automatic organization and insights.
+> **Estimated effort:** 4-6 weeks
+> **Labels:** `phase-10`, `ml`, `feature`
+> **Depends on:** Phase 5
 
-The Success Roadmap includes:
-- **Phase-by-phase feature prioritization** based on user value
-- **Competitive advantages** and market positioning
-- **Success metrics & KPIs** to track progress
-- **Monetization strategy** for sustainable growth
-- **Launch strategy** for market entry
+| # | Task | Difficulty | Labels |
+|---|------|-----------|--------|
+| 10.1 | **Document type detection** — Auto-classify as receipt, ID, letter, invoice, etc. | Hard | `ml` |
+| 10.2 | **Auto-categorization** — Suggest folders based on document content | Hard | `ml` |
+| 10.3 | **Receipt data extraction** — Parse total, date, vendor from receipts | Hard | `ml` |
+| 10.4 | **Business card scanning** — Extract name, phone, email, company | Hard | `ml` |
+| 10.5 | **Duplicate detection** — Flag similar/duplicate documents | Medium | `ml` |
+| 10.6 | **Document summarization** — AI-generated summary of long documents | Hard | `ml` |
 
 ---
 
-*Last Updated: 2024-12-19*
+## For Contributors
+
+### Getting started
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup instructions.
+
+### Picking work
+
+1. Look at the **current phase** being worked on (check issue milestones)
+2. Filter issues by `good-first-issue` for easy entry points
+3. Comment on an issue to claim it before starting work
+4. One issue per contributor at a time to avoid conflicts
+
+### Issue labels
+
+| Label | Meaning |
+|-------|---------|
+| `good-first-issue` | Great for new contributors |
+| `bug` | Something broken |
+| `critical` | Data loss or crash risk |
+| `feature` | New functionality |
+| `technical-debt` | Code quality improvement |
+| `scanner` | Scanner module |
+| `ocr` | Text recognition |
+| `ui` | Visual/interface changes |
+| `ux` | User experience/workflow |
+| `performance` | Speed/memory improvements |
+| `testing` | Tests |
+| `platform` | Platform-specific (Android/iOS/Desktop) |
+
+### Branch naming
+
+```
+feature/phase1-ml-kit-scanner
+fix/phase0-delete-where-clause
+refactor/phase0-unify-bloc-pattern
+```
+
+### Phase dependencies
+
+```
+Phase 0 (Bug Fixes)
+  └─> Phase 1 (Scanner Foundation) ← START HERE after Phase 0
+        ├─> Phase 2 (Real-time UX)
+        ├─> Phase 3 (Filters) ─> Phase 6 (Editing)
+        ├─> Phase 4 (Multi-page)
+        └─> Phase 5 (OCR) ─> Phase 10 (AI)
+  └─> Phase 7 (Backup/Security) ─> Phase 9 (Cloud)
+  └─> Phase 8 (Polish) — can run in parallel anytime
+```
+
+---
+
+*Last updated: 2026-03-04*
 *Version: 1.0.0*
-*Filtering Feature: COMPLETE ✅*
-*Next Review: Weekly*
-
